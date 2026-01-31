@@ -25,8 +25,8 @@
        ├── config.lua
        ├── services.lua
        ├── npc_manager.lua
-       ├── hitbox.lua
-       ├── esp.lua
+      ├── target_sizing.lua
+      ├── markers.lua
        ├── lighting.lua
        ├── weapons.lua
        └── gui.lua

@@ -1,9 +1,9 @@
 -- Weapons Module
--- Handles weapon modifications (Anti-Recoil, Firemodes)
+-- Handles weapon adjustments (Stability, Firemodes)
 
 local Weapons = {}
 
--- Applies weapon patches (Anti-Recoil and/or Firemodes)
+-- Applies weapon patches (Stability and/or Firemodes)
 function Weapons.patchWeapons(replicatedStorage, patchOptions)
     local weaponsFolder = replicatedStorage:FindFirstChild("Shared")
         and replicatedStorage.Shared:FindFirstChild("Configs")
@@ -23,7 +23,7 @@ function Weapons.patchWeapons(replicatedStorage, patchOptions)
                         if success and receiver and receiver.Config and receiver.Config.Tune then
                             local tune = receiver.Config.Tune
                             
-                            -- Apply Anti-Recoil
+                        
                             if patchOptions.recoil then
                                 tune.Recoil_X = 0 
                                 tune.Recoil_Z = 0 
@@ -35,7 +35,7 @@ function Weapons.patchWeapons(replicatedStorage, patchOptions)
                                 tune.RecoilAccelDamp_Prone = Vector3.new(1, 1, 1)
                             end
                             
-                            -- Unlock Firemodes
+                            -- Adjust Firemodes
                             if patchOptions.firemodes then 
                                 tune.Firemodes = {3, 2, 1, 0} 
                             end

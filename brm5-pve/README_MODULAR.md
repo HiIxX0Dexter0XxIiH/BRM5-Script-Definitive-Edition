@@ -12,8 +12,8 @@ brm5-pve/
     ├── config.lua        # Configuración y constantes
     ├── services.lua      # Referencias a servicios de Roblox
     ├── npc_manager.lua   # Gestión de NPCs enemigos
-    ├── hitbox.lua        # Modificación de hitboxes
-    ├── esp.lua           # Sistema ESP/Wallhack
+    ├── target_sizing.lua # Ajuste de tamaño de objetivos
+    ├── markers.lua       # Sistema de marcadores de visibilidad
     ├── lighting.lua      # Control de iluminación
     ├── weapons.lua       # Modificaciones de armas
     └── gui.lua           # Interfaz gráfica
@@ -23,9 +23,9 @@ brm5-pve/
 
 ### 1. config.lua
 Contiene todas las configuraciones, constantes y variables de estado del script:
-- Tamaños de hitbox
-- Estados de toggles (ESP, Silent Aim, FullBright)
-- Colores de ESP (visible/oculto)
+- Tamaños de objetivos
+- Estados de toggles (Marcadores, Tamaño, FullBright)
+- Colores de marcadores (visible/oculto)
 - Opciones de parches de armas
 
 ### 2. services.lua
@@ -41,18 +41,18 @@ Gestiona la detección y seguimiento de NPCs enemigos:
 - Escanea workspace por NPCs existentes
 - Configura listeners para NPCs nuevos
 
-### 4. hitbox.lua
-Maneja la modificación de hitboxes para Silent Aim:
-- Amplía hitboxes de NPCs
+### 4. target_sizing.lua
+Maneja el ajuste de tamaño de objetivos para precisión/visibilidad:
+- Ajusta el tamaño de objetivos de NPCs
 - Almacena tamaños originales
-- Restaura hitboxes al desactivar
-- Opción de mostrar hitboxes visualmente
+- Restaura tamaños al desactivar
+- Opción de mostrar cajas de objetivo visualmente
 
-### 5. esp.lua
-Sistema de ESP (Wallhack):
-- Crea cajas visuales alrededor de enemigos
+### 5. markers.lua
+Sistema de marcadores de visibilidad:
+- Crea cajas visuales alrededor de objetivos
 - Cambia colores según línea de vista
-- Permite ver enemigos a través de paredes
+- Indica si hay obstáculo entre jugador y objetivo
 - Gestiona tracking de partes del cuerpo
 
 ### 6. lighting.lua
@@ -64,7 +64,7 @@ Control de iluminación del juego:
 
 ### 7. weapons.lua
 Modificaciones de armas:
-- Anti-Recoil (elimina retroceso)
+- Estabilidad (reduce retroceso)
 - Desbloqueo de modos de disparo
 - Parchea configuraciones de armas en ReplicatedStorage
 

@@ -5,6 +5,7 @@ local NPCManager = {}
 
 NPCManager.activeNPCs = {}      -- List of enemies currently in the game
 NPCManager.wallConnections = {} -- List of connections to clean up later
+NPCManager.modelConnections = {} -- Per-model connections for delayed AI detection
 
 -- Finds the main part of a character (Root)
 function NPCManager.getRootPart(model)
@@ -24,8 +25,8 @@ function NPCManager.hasAIChild(model)
 end
 
 -- Adds an enemy to our tracking list
-function NPCManager:addNPC(model, espModule)
-    if self.activeNPCs[model] or model.Name ~= "Male" or not self.hasAIChild(model) then 
+function NPCManager:addNPC(model, markerModule)
+    if self.activeNPCs[model] or not self.hasAIChild(model) then 
         return 
     end
     
@@ -38,10 +39,36 @@ function NPCManager:addNPC(model, espModule)
     
     self.activeNPCs[model] = { head = head, root = root }
     
-    -- Create ESP box if wall ESP is enabled
-    if espModule and espModule.isEnabled() then
-        espModule.createBoxForPart(head)
+    -- Create marker box if visibility markers are enabled
+    if markerModule and markerModule.isEnabled() then
+        markerModule.createBoxForPart(head)
     end
+end
+
+-- Tracks a model and waits for AI_ child if it appears later
+function NPCManager:trackPotentialNPC(model, markerModule)
+    if self.activeNPCs[model] then
+        return
+    end
+    if self.hasAIChild(model) then
+        self:addNPC(model, markerModule)
+        return
+    end
+    if self.modelConnections[model] then
+        return
+    end
+
+    local connection
+    connection = model.ChildAdded:Connect(function(child)
+        if type(child.Name) == "string" and child.Name:sub(1, 3) == "AI_" then
+            self:addNPC(model, markerModule)
+            if connection then
+                connection:Disconnect()
+            end
+            self.modelConnections[model] = nil
+        end
+    end)
+    self.modelConnections[model] = connection
 end
 
 -- Removes an NPC from tracking
@@ -55,24 +82,20 @@ function NPCManager:getActiveNPCs()
 end
 
 -- Scans workspace for existing NPCs
-function NPCManager:scanWorkspace(workspace, espModule)
+function NPCManager:scanWorkspace(workspace, markerModule)
     for _, m in ipairs(workspace:GetChildren()) do
-        if m:IsA("Model") and m.Name == "Male" then 
-            if self.hasAIChild(m) then 
-                self:addNPC(m, espModule) 
-            end
+        if m:IsA("Model") then 
+            self:trackPotentialNPC(m, markerModule)
         end
     end
 end
 
 -- Sets up listener for new NPCs
-function NPCManager:setupListener(workspace, espModule)
+function NPCManager:setupListener(workspace, markerModule)
     local connection = workspace.ChildAdded:Connect(function(m)
-        if m:IsA("Model") and m.Name == "Male" then 
+        if m:IsA("Model") then 
             task.delay(0.2, function() 
-                if self.hasAIChild(m) then 
-                    self:addNPC(m, espModule) 
-                end 
+                self:trackPotentialNPC(m, markerModule)
             end) 
         end
     end)
@@ -86,6 +109,10 @@ function NPCManager:cleanup()
         pcall(function() c:Disconnect() end) 
     end
     self.wallConnections = {}
+    for _, c in pairs(self.modelConnections) do
+        pcall(function() c:Disconnect() end)
+    end
+    self.modelConnections = {}
     self.activeNPCs = {}
 end
 

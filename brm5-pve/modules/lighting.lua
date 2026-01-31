@@ -4,6 +4,7 @@
 local Lighting = {}
 
 Lighting.originalLighting = {}
+Lighting.fullBrightApplied = false
 
 -- Stores original lighting settings
 function Lighting:storeOriginalSettings(lightingService)
@@ -23,6 +24,7 @@ function Lighting:applyFullBright(lightingService)
     lightingService.FogEnd = 100000
     lightingService.GlobalShadows = false
     lightingService.Ambient = Color3.new(1, 1, 1)
+    self.fullBrightApplied = true
 end
 
 -- Restores original lighting settings
@@ -30,12 +32,19 @@ function Lighting:restoreOriginal(lightingService)
     for property, value in pairs(self.originalLighting) do
         lightingService[property] = value
     end
+    self.fullBrightApplied = false
 end
 
 -- Updates lighting based on config
 function Lighting:update(lightingService, config)
     if config.fullBrightEnabled then
-        self:applyFullBright(lightingService)
+        if not self.fullBrightApplied then
+            self:applyFullBright(lightingService)
+        end
+        return
+    end
+    if self.fullBrightApplied then
+        self:restoreOriginal(lightingService)
     end
 end
 
