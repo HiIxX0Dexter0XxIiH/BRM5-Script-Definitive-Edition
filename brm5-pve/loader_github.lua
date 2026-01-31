@@ -1,10 +1,9 @@
 -- BRM5 PVE Loader (GitHub Version)
--- Este es un ejemplo de cómo cargar el script desde GitHub
--- Reemplaza YOUR_USERNAME y YOUR_REPO con tus datos reales
+-- Carga el script desde GitHub
 
-local GITHUB_USER = "YOUR_USERNAME"  -- Tu usuario de GitHub
-local GITHUB_REPO = "YOUR_REPO"      -- Nombre de tu repositorio
-local BRANCH = "main"                -- Rama (normalmente "main" o "master")
+local GITHUB_USER = "HiIxX0Dexter0XxIiH"
+local GITHUB_REPO = "BRM5-Script-Definitive-Edition"
+local BRANCH = "main"
 
 -- URL del script principal
 local MAIN_SCRIPT_URL = string.format(
