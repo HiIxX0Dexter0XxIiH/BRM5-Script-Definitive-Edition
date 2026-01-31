@@ -25,7 +25,7 @@ function NPCManager.hasAIChild(model)
 end
 
 -- Adds an enemy to our tracking list
-function NPCManager:addNPC(model, markerModule)
+function NPCManager:addNPC(model, markerModule, config)
     if self.activeNPCs[model] or not self.hasAIChild(model) then 
         return 
     end
@@ -41,17 +41,17 @@ function NPCManager:addNPC(model, markerModule)
     
     -- Create marker box if visibility markers are enabled
     if markerModule and markerModule.isEnabled() then
-        markerModule.createBoxForPart(head)
+        markerModule.createBoxForPart(head, config)
     end
 end
 
 -- Tracks a model and waits for AI_ child if it appears later
-function NPCManager:trackPotentialNPC(model, markerModule)
+function NPCManager:trackPotentialNPC(model, markerModule, config)
     if self.activeNPCs[model] then
         return
     end
     if self.hasAIChild(model) then
-        self:addNPC(model, markerModule)
+        self:addNPC(model, markerModule, config)
         return
     end
     if self.modelConnections[model] then
@@ -61,7 +61,7 @@ function NPCManager:trackPotentialNPC(model, markerModule)
     local connection
     connection = model.ChildAdded:Connect(function(child)
         if type(child.Name) == "string" and child.Name:sub(1, 3) == "AI_" then
-            self:addNPC(model, markerModule)
+            self:addNPC(model, markerModule, config)
             if connection then
                 connection:Disconnect()
             end
@@ -82,20 +82,20 @@ function NPCManager:getActiveNPCs()
 end
 
 -- Scans workspace for existing NPCs
-function NPCManager:scanWorkspace(workspace, markerModule)
+function NPCManager:scanWorkspace(workspace, markerModule, config)
     for _, m in ipairs(workspace:GetChildren()) do
         if m:IsA("Model") then 
-            self:trackPotentialNPC(m, markerModule)
+            self:trackPotentialNPC(m, markerModule, config)
         end
     end
 end
 
 -- Sets up listener for new NPCs
-function NPCManager:setupListener(workspace, markerModule)
+function NPCManager:setupListener(workspace, markerModule, config)
     local connection = workspace.ChildAdded:Connect(function(m)
         if m:IsA("Model") then 
             task.delay(0.2, function() 
-                self:trackPotentialNPC(m, markerModule)
+                self:trackPotentialNPC(m, markerModule, config)
             end) 
         end
     end)

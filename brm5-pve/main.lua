@@ -126,10 +126,10 @@ local callbacks = {
 GUI:init(Services, Config, callbacks)
 
 -- Scan for existing NPCs
-NPCManager:scanWorkspace(Services.Workspace, Markers)
+NPCManager:scanWorkspace(Services.Workspace, Markers, Config)
 
 -- Setup listener for new NPCs
-NPCManager:setupListener(Services.Workspace, Markers)
+NPCManager:setupListener(Services.Workspace, Markers, Config)
 
 -- Main game loop
 local markerAccumulator = 0

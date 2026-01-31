@@ -17,7 +17,8 @@ function Markers.createBoxForPart(part, config)
     box.Adornee = part
     box.AlwaysOnTop = true
     box.ZIndex = 10
-    box.Color3 = config.visibleColor
+    local visibleColor = (config and config.visibleColor) or Color3.fromRGB(0, 255, 0)
+    box.Color3 = visibleColor
     box.Transparency = 0.3
     box.Parent = part
     
