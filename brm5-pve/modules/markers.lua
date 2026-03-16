@@ -33,8 +33,10 @@ function Markers.createBoxForPart(part, config)
         return
     end
 
-    ensureBox(part, "Visible_Marker_Box", (config and config.visibleColor) or Color3.fromRGB(0, 255, 0))
-    ensureBox(part, "Hidden_Marker_Box", (config and config.hiddenColor) or Color3.fromRGB(255, 0, 0))
+    local visibleBox = ensureBox(part, "Visible_Marker_Box", (config and config.visibleColor) or Color3.fromRGB(0, 255, 0))
+    local hiddenBox = ensureBox(part, "Hidden_Marker_Box", (config and config.hiddenColor) or Color3.fromRGB(255, 0, 0))
+    visibleBox.Transparency = Markers.activeTransparency
+    hiddenBox.Transparency = Markers.inactiveTransparency
     Markers.trackedParts[part] = true
 end
 
