@@ -20,41 +20,37 @@ function NPCManager.getRootPart(model)
            model:FindFirstChild("UpperTorso")
 end
 
--- Gets the inner NPC model from Workspace.Model.Male.
-function NPCManager.getNPCModel(container)
+-- Gets all NPC candidate models from a Workspace.Model container.
+function NPCManager.getNPCModels(container)
     if not container or not container:IsA("Model") or container.Name ~= "Model" then
-        return nil
+        return {}
     end
 
-    local npc = container:FindFirstChild("NPCS")
-    if npc and npc:IsA("Model") then
-        return npc
+    local npcs = {}
+    for _, child in ipairs(container:GetChildren()) do
+        if child:IsA("Model") then
+            if child.Name == "NPCS" then
+                table.insert(npcs, child)
+            elseif child.Name == "Male" and not child:FindFirstChildOfClass("BillboardGui") then
+                child.Name = "NPCS"
+                table.insert(npcs, child)
+            end
+        end
     end
 
-    local male = container:FindFirstChild("Male")
-    if male and male:IsA("Model") and not male:FindFirstChildOfClass("BillboardGui") then
-        male.Name = "NPCS"
-        return male
-    end
-
-    return nil
+    return npcs
 end
 
 -- Checks if the container matches the new NPC structure
 function NPCManager.isNPCModel(container)
-    return NPCManager.getNPCModel(container) ~= nil
+    return #NPCManager.getNPCModels(container) > 0
 end
 
--- Adds an enemy to our tracking list
-function NPCManager:addNPC(container, markerModule, config)
-    local npc = self.getNPCModel(container)
-    if not npc or self.activeNPCs[npc] then 
-        if not npc then
-            debugLog(config, "addNPC skipped: no valid NPC model under " .. container:GetFullName())
-        end
-        return 
+-- Adds a specific NPC model to our tracking list
+function NPCManager:addNPCModel(npc, container, markerModule, config)
+    if not npc or self.activeNPCs[npc] then
+        return
     end
-
     local head = npc:FindFirstChild("Head")
     local root = self.getRootPart(npc)
     
@@ -72,35 +68,38 @@ function NPCManager:addNPC(container, markerModule, config)
     end
 end
 
+-- Adds all valid NPCs under a container
+function NPCManager:addNPC(container, markerModule, config)
+    local npcs = self.getNPCModels(container)
+    if #npcs == 0 then
+        debugLog(config, "addNPC skipped: no valid NPC model under " .. container:GetFullName())
+        return
+    end
+
+    for _, npc in ipairs(npcs) do
+        self:addNPCModel(npc, container, markerModule, config)
+    end
+end
+
 -- Tracks a model and waits for Male if it appears later
 function NPCManager:trackPotentialNPC(container, markerModule, config)
     debugLog(config, "Inspecting container: " .. container:GetFullName())
-    local npc = self.getNPCModel(container)
-    if npc and self.activeNPCs[npc] then
-        debugLog(config, "Already tracked: " .. npc:GetFullName())
+    local npcs = self.getNPCModels(container)
+    local alreadyTracked = true
+    for _, npc in ipairs(npcs) do
+        if not self.activeNPCs[npc] then
+            alreadyTracked = false
+            break
+        end
+    end
+    if #npcs > 0 and alreadyTracked then
+        debugLog(config, "All NPCs already tracked in " .. container:GetFullName())
         return
     end
-    if self.isNPCModel(container) then
-        local male = container:FindFirstChild("Male")
-        local directBillboard = male and male:FindFirstChildOfClass("BillboardGui")
-        debugLog(config, "Valid NPC container found. Male=" .. tostring(male) .. ", direct BillboardGui=" .. tostring(directBillboard))
+    if #npcs > 0 then
+        debugLog(config, "Valid NPC container found. Count=" .. tostring(#npcs))
         self:addNPC(container, markerModule, config)
-        return
     end
-    local male = container:FindFirstChild("Male")
-    local maleClass = male and male.ClassName or "nil"
-    local directBillboard = male and male:FindFirstChildOfClass("BillboardGui")
-    debugLog(
-        config,
-        "Rejected container "
-            .. container:GetFullName()
-            .. "; Male="
-            .. tostring(male)
-            .. "; MaleClass="
-            .. tostring(maleClass)
-            .. "; DirectBillboard="
-            .. tostring(directBillboard)
-    )
     if not container:IsA("Model") or container.Name ~= "Model" then
         return
     end
@@ -111,11 +110,8 @@ function NPCManager:trackPotentialNPC(container, markerModule, config)
     local connection
     connection = container.ChildAdded:Connect(function(child)
         if child:IsA("Model") and (child.Name == "Male" or child.Name == "NPCS") then
+            debugLog(config, "New candidate under container: " .. child:GetFullName())
             self:addNPC(container, markerModule, config)
-            if connection then
-                connection:Disconnect()
-            end
-            self.modelConnections[container] = nil
         end
     end)
     self.modelConnections[container] = connection
