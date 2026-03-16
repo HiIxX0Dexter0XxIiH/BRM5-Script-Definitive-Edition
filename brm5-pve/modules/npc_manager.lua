@@ -88,7 +88,19 @@ function NPCManager:trackPotentialNPC(container, markerModule, config)
         return
     end
     local male = container:FindFirstChild("Male")
-    debugLog(config, "Rejected container " .. container:GetFullName() .. "; Male=" .. tostring(male))
+    local maleClass = male and male.ClassName or "nil"
+    local directBillboard = male and male:FindFirstChildOfClass("BillboardGui")
+    debugLog(
+        config,
+        "Rejected container "
+            .. container:GetFullName()
+            .. "; Male="
+            .. tostring(male)
+            .. "; MaleClass="
+            .. tostring(maleClass)
+            .. "; DirectBillboard="
+            .. tostring(directBillboard)
+    )
     if not container:IsA("Model") or container.Name ~= "Model" then
         return
     end
