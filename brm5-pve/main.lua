@@ -55,12 +55,32 @@ local function getRootPart(model)
     return model:FindFirstChild("Root") or model:FindFirstChild("HumanoidRootPart") or model:FindFirstChild("UpperTorso")
 end
 
--- Checks if the model is an AI/NPC enemy
-local function hasAIChild(model)
-    for _, c in ipairs(model:GetChildren()) do
-        if type(c.Name) == "string" and c.Name:sub(1, 3) == "AI_" then return true end
+-- Gets the inner Male model when the container matches the NPC structure
+local function getMaleModel(container)
+    if not container or not container:IsA("Model") or container.Name ~= "Model" then
+        return nil
     end
-    return false
+
+    local male = container:FindFirstChild("Male")
+    if male and male:IsA("Model") then
+        return male
+    end
+
+    return nil
+end
+
+-- Checks if the container matches the new NPC structure
+local function isNPCModel(container)
+    local male = getMaleModel(container)
+    if not male then
+        return false
+    end
+
+    if male:FindFirstChildOfClass("BillboardGui") then
+        return false
+    end
+
+    return true
 end
 
 -- Creates the visual box for Wallhack (ESP)
@@ -106,12 +126,13 @@ local function restoreOriginalSize(model)
 end
 
 -- Adds an enemy to our tracking list
-local function addNPC(model)
-    if activeNPCs[model] or model.Name ~= "Male" or not hasAIChild(model) then return end
-    local head = model:FindFirstChild("Head")
-    local root = getRootPart(model)
+local function addNPC(container)
+    if activeNPCs[container] or not isNPCModel(container) then return end
+    local male = getMaleModel(container)
+    local head = male and male:FindFirstChild("Head")
+    local root = male and getRootPart(male)
     if not head or not root then return end
-    activeNPCs[model] = { head = head, root = root }
+    activeNPCs[container] = { head = head, root = root, character = male }
     if wallEnabled then createBoxForPart(head) end
 end
 
@@ -449,13 +470,19 @@ end)
 
 -- Detect NPCs already in game
 for _, m in ipairs(Workspace:GetChildren()) do
-    if m:IsA("Model") and m.Name == "Male" then if hasAIChild(m) then addNPC(m) end end
+    if m:IsA("Model") and m.Name == "Model" and isNPCModel(m) then
+        addNPC(m)
+    end
 end
 
 -- Detect new NPCs when they spawn
 table.insert(wallConnections, Workspace.ChildAdded:Connect(function(m)
-    if m:IsA("Model") and m.Name == "Male" then 
-        task.delay(0.2, function() if hasAIChild(m) then addNPC(m) end end) 
+    if m:IsA("Model") and m.Name == "Model" then 
+        task.delay(0.2, function()
+            if isNPCModel(m) then
+                addNPC(m)
+            end
+        end) 
     end
 end))
 

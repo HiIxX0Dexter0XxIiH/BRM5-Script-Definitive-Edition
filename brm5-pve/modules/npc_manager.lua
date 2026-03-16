@@ -5,7 +5,7 @@ local NPCManager = {}
 
 NPCManager.activeNPCs = {}      -- List of enemies currently in the game
 NPCManager.wallConnections = {} -- List of connections to clean up later
-NPCManager.modelConnections = {} -- Per-model connections for delayed AI detection
+NPCManager.modelConnections = {} -- Per-model connections for delayed NPC detection
 
 -- Finds the main part of a character (Root)
 function NPCManager.getRootPart(model)
@@ -14,30 +14,49 @@ function NPCManager.getRootPart(model)
            model:FindFirstChild("UpperTorso")
 end
 
--- Checks if the model is an AI/NPC enemy
-function NPCManager.hasAIChild(model)
-    for _, c in ipairs(model:GetChildren()) do
-        if type(c.Name) == "string" and c.Name:sub(1, 3) == "AI_" then 
-            return true 
-        end
+-- Gets the inner Male model when the container matches the NPC structure
+function NPCManager.getMaleModel(container)
+    if not container or not container:IsA("Model") or container.Name ~= "Model" then
+        return nil
     end
-    return false
+
+    local male = container:FindFirstChild("Male")
+    if male and male:IsA("Model") then
+        return male
+    end
+
+    return nil
+end
+
+-- Checks if the container matches the new NPC structure
+function NPCManager.isNPCModel(container)
+    local male = NPCManager.getMaleModel(container)
+    if not male then
+        return false
+    end
+
+    if male:FindFirstChildOfClass("BillboardGui") then
+        return false
+    end
+
+    return true
 end
 
 -- Adds an enemy to our tracking list
-function NPCManager:addNPC(model, markerModule, config)
-    if self.activeNPCs[model] or not self.hasAIChild(model) then 
+function NPCManager:addNPC(container, markerModule, config)
+    if self.activeNPCs[container] or not self.isNPCModel(container) then 
         return 
     end
-    
-    local head = model:FindFirstChild("Head")
-    local root = self.getRootPart(model)
+
+    local male = self.getMaleModel(container)
+    local head = male and male:FindFirstChild("Head")
+    local root = male and self.getRootPart(male)
     
     if not head or not root then 
         return 
     end
     
-    self.activeNPCs[model] = { head = head, root = root }
+    self.activeNPCs[container] = { head = head, root = root, character = male }
     
     -- Create marker box if visibility markers are enabled
     if markerModule and markerModule.isEnabled() then
@@ -45,30 +64,33 @@ function NPCManager:addNPC(model, markerModule, config)
     end
 end
 
--- Tracks a model and waits for AI_ child if it appears later
-function NPCManager:trackPotentialNPC(model, markerModule, config)
-    if self.activeNPCs[model] then
+-- Tracks a model and waits for Male if it appears later
+function NPCManager:trackPotentialNPC(container, markerModule, config)
+    if self.activeNPCs[container] then
         return
     end
-    if self.hasAIChild(model) then
-        self:addNPC(model, markerModule, config)
+    if self.isNPCModel(container) then
+        self:addNPC(container, markerModule, config)
         return
     end
-    if self.modelConnections[model] then
+    if not container:IsA("Model") or container.Name ~= "Model" then
+        return
+    end
+    if self.modelConnections[container] then
         return
     end
 
     local connection
-    connection = model.ChildAdded:Connect(function(child)
-        if type(child.Name) == "string" and child.Name:sub(1, 3) == "AI_" then
-            self:addNPC(model, markerModule, config)
+    connection = container.ChildAdded:Connect(function(child)
+        if child:IsA("Model") and child.Name == "Male" then
+            self:addNPC(container, markerModule, config)
             if connection then
                 connection:Disconnect()
             end
-            self.modelConnections[model] = nil
+            self.modelConnections[container] = nil
         end
     end)
-    self.modelConnections[model] = connection
+    self.modelConnections[container] = connection
 end
 
 -- Removes an NPC from tracking
@@ -84,7 +106,7 @@ end
 -- Scans workspace for existing NPCs
 function NPCManager:scanWorkspace(workspace, markerModule, config)
     for _, m in ipairs(workspace:GetChildren()) do
-        if m:IsA("Model") then 
+        if m:IsA("Model") and m.Name == "Model" then 
             self:trackPotentialNPC(m, markerModule, config)
         end
     end
@@ -93,7 +115,7 @@ end
 -- Sets up listener for new NPCs
 function NPCManager:setupListener(workspace, markerModule, config)
     local connection = workspace.ChildAdded:Connect(function(m)
-        if m:IsA("Model") then 
+        if m:IsA("Model") and m.Name == "Model" then 
             task.delay(0.2, function() 
                 self:trackPotentialNPC(m, markerModule, config)
             end) 
