@@ -26,7 +26,7 @@ function NPCManager.getNPCModel(container)
     end
 
     local male = container:FindFirstChild("Male")
-    if male and male:IsA("Model") and not male:FindFirstChildWhichIsA("BillboardGui", true) then
+    if male and male:IsA("Model") and not male:FindFirstChildOfClass("BillboardGui") then
         male.Name = "NPCS"
         return male
     end
