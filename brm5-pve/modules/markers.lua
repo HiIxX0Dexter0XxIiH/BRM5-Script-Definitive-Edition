@@ -5,31 +5,51 @@ Markers.trackedParts = {} -- List of body parts we are watching
 Markers.enabled = false
 Markers.raycastParams = RaycastParams.new()
 Markers.raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+Markers.activeTransparency = 0.3
+Markers.inactiveTransparency = 1
 
-function Markers.createBoxForPart(part, config)
-    if not part or part:FindFirstChild("Marker_Box") then 
-        return 
+local function ensureBox(part, name, color)
+    local box = part:FindFirstChild(name)
+    if box then
+        box.Color3 = color
+        return box
     end
-    
+
     local box = Instance.new("BoxHandleAdornment")
-    box.Name = "Marker_Box"
+    box.Name = name
     box.Size = part.Size + Vector3.new(0.1, 0.1, 0.1)
     box.Adornee = part
     box.AlwaysOnTop = true
     box.ZIndex = 10
-    local visibleColor = (config and config.visibleColor) or Color3.fromRGB(0, 255, 0)
-    box.Color3 = visibleColor
-    box.Transparency = 0.3
+    box.Color3 = color
+    box.Transparency = Markers.inactiveTransparency
     box.Parent = part
-    
+
+    return box
+end
+
+function Markers.createBoxForPart(part, config)
+    if not part then
+        return
+    end
+
+    ensureBox(part, "Visible_Marker_Box", (config and config.visibleColor) or Color3.fromRGB(0, 255, 0))
+    ensureBox(part, "Hidden_Marker_Box", (config and config.hiddenColor) or Color3.fromRGB(255, 0, 0))
     Markers.trackedParts[part] = true
 end
 
 -- Removes all marker boxes
 function Markers.destroyAllBoxes()
     for part, _ in pairs(Markers.trackedParts) do
-        if part and part:FindFirstChild("Marker_Box") then 
-            pcall(function() part.Marker_Box:Destroy() end) 
+        if part then
+            local visibleBox = part:FindFirstChild("Visible_Marker_Box")
+            local hiddenBox = part:FindFirstChild("Hidden_Marker_Box")
+            if visibleBox then
+                pcall(function() visibleBox:Destroy() end)
+            end
+            if hiddenBox then
+                pcall(function() hiddenBox:Destroy() end)
+            end
         end
     end
     Markers.trackedParts = {}
@@ -57,14 +77,18 @@ function Markers.updateColors(npcManager, camera, workspace, localPlayer, config
         if processed >= maxPerStep then
             break
         end
-        if data.head and data.head:FindFirstChild("Marker_Box") then
+        if data.head then
+            local visibleBox = ensureBox(data.head, "Visible_Marker_Box", config.visibleColor)
+            local hiddenBox = ensureBox(data.head, "Hidden_Marker_Box", config.hiddenColor)
             rp.FilterDescendantsInstances = {character, data.head}
             
             -- Raycast to check if there is an obstacle between you and the NPC
             local r = workspace:Raycast(origin, data.head.Position - origin, rp)
-            data.head.Marker_Box.Color3 = (not r or r.Instance:IsDescendantOf(model)) 
-                and config.visibleColor 
-                or config.hiddenColor
+            local isVisible = not r or r.Instance:IsDescendantOf(model)
+            visibleBox.Color3 = config.visibleColor
+            hiddenBox.Color3 = config.hiddenColor
+            visibleBox.Transparency = isVisible and Markers.activeTransparency or Markers.inactiveTransparency
+            hiddenBox.Transparency = isVisible and Markers.inactiveTransparency or Markers.activeTransparency
             processed = processed + 1
         end
     end
