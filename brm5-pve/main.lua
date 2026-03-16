@@ -22,6 +22,7 @@ local activeNPCs = {}      -- List of enemies currently in the game
 local trackedParts = {}    -- List of body parts we are watching
 local originalSizes = {}   -- Storage for original sizes to restore them later
 local wallConnections = {} -- List of technical connections to clean up later
+local modelConnections = {} -- Per-container connections for delayed NPC detection
 
 -- TOGGLES (True = On / False = Off)
 local wallEnabled = false       -- ESP (Wallhack)
@@ -116,7 +117,12 @@ end
 
 -- Restores hitboxes to their normal size
 local function restoreOriginalSize(model)
-    local root = getRootPart(model)
+    local data = activeNPCs[model]
+    local root = data and data.root
+    if not root then
+        local male = getMaleModel(model)
+        root = male and getRootPart(male)
+    end
     if root and originalSizes[model] then
         root.Size = originalSizes[model]
         root.Transparency = 1
@@ -134,6 +140,29 @@ local function addNPC(container)
     if not head or not root then return end
     activeNPCs[container] = { head = head, root = root, character = male }
     if wallEnabled then createBoxForPart(head) end
+end
+
+-- Tracks a container and waits for Male if it appears later
+local function trackPotentialNPC(container)
+    if activeNPCs[container] then return end
+    if isNPCModel(container) then
+        addNPC(container)
+        return
+    end
+    if not container:IsA("Model") or container.Name ~= "Model" then return end
+    if modelConnections[container] then return end
+
+    local connection
+    connection = container.ChildAdded:Connect(function(child)
+        if child:IsA("Model") and child.Name == "Male" then
+            addNPC(container)
+            if connection then
+                connection:Disconnect()
+            end
+            modelConnections[container] = nil
+        end
+    end)
+    modelConnections[container] = connection
 end
 
 -- Weapon Mods: Anti-Recoil and Firemodes
@@ -463,6 +492,7 @@ unl.MouseButton1Click:Connect(function()
     destroyAllBoxes()
     for m, _ in pairs(activeNPCs) do restoreOriginalSize(m) end
     for _, c in ipairs(wallConnections) do pcall(function() c:Disconnect() end) end
+    for _, c in pairs(modelConnections) do pcall(function() c:Disconnect() end) end
     sg:Destroy()
 end)
 
@@ -470,8 +500,8 @@ end)
 
 -- Detect NPCs already in game
 for _, m in ipairs(Workspace:GetChildren()) do
-    if m:IsA("Model") and m.Name == "Model" and isNPCModel(m) then
-        addNPC(m)
+    if m:IsA("Model") and m.Name == "Model" then
+        trackPotentialNPC(m)
     end
 end
 
@@ -479,9 +509,7 @@ end
 table.insert(wallConnections, Workspace.ChildAdded:Connect(function(m)
     if m:IsA("Model") and m.Name == "Model" then 
         task.delay(0.2, function()
-            if isNPCModel(m) then
-                addNPC(m)
-            end
+            trackPotentialNPC(m)
         end) 
     end
 end))

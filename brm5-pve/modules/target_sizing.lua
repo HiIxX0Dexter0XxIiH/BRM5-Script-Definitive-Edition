@@ -25,7 +25,12 @@ end
 
 -- Restores target bounds to their normal size
 function TargetSizing:restoreOriginalSize(model, npcManager)
-    local root = npcManager.getRootPart(model)
+    local data = npcManager:getActiveNPCs()[model]
+    local root = data and data.root
+    if not root then
+        local character = data and data.character
+        root = character and npcManager.getRootPart(character) or npcManager.getRootPart(model)
+    end
     if root and self.originalSizes[model] then
         root.Size = self.originalSizes[model]
         root.Transparency = 1
