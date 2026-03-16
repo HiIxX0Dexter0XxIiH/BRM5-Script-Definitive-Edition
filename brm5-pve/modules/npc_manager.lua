@@ -14,14 +14,20 @@ function NPCManager.getRootPart(model)
            model:FindFirstChild("UpperTorso")
 end
 
--- Gets the inner Male model when the container matches the NPC structure
-function NPCManager.getMaleModel(container)
+-- Gets the inner NPC model. If a valid Male is found, it is renamed to NPCS.
+function NPCManager.getNPCModel(container)
     if not container or not container:IsA("Model") or container.Name ~= "Model" then
         return nil
     end
 
+    local npc = container:FindFirstChild("NPCS")
+    if npc and npc:IsA("Model") then
+        return npc
+    end
+
     local male = container:FindFirstChild("Male")
-    if male and male:IsA("Model") then
+    if male and male:IsA("Model") and not male:FindFirstChildOfClass("BillboardGui") then
+        male.Name = "NPCS"
         return male
     end
 
@@ -30,33 +36,24 @@ end
 
 -- Checks if the container matches the new NPC structure
 function NPCManager.isNPCModel(container)
-    local male = NPCManager.getMaleModel(container)
-    if not male then
-        return false
-    end
-
-    if male:FindFirstChildOfClass("BillboardGui") then
-        return false
-    end
-
-    return true
+    return NPCManager.getNPCModel(container) ~= nil
 end
 
 -- Adds an enemy to our tracking list
 function NPCManager:addNPC(container, markerModule, config)
-    if self.activeNPCs[container] or not self.isNPCModel(container) then 
+    local npc = self.getNPCModel(container)
+    if not npc or self.activeNPCs[npc] then 
         return 
     end
 
-    local male = self.getMaleModel(container)
-    local head = male and male:FindFirstChild("Head")
-    local root = male and self.getRootPart(male)
+    local head = npc:FindFirstChild("Head")
+    local root = self.getRootPart(npc)
     
     if not head or not root then 
         return 
     end
     
-    self.activeNPCs[container] = { head = head, root = root, character = male }
+    self.activeNPCs[npc] = { head = head, root = root, character = npc, container = container }
     
     -- Create marker box if visibility markers are enabled
     if markerModule and markerModule.isEnabled() then
@@ -66,7 +63,8 @@ end
 
 -- Tracks a model and waits for Male if it appears later
 function NPCManager:trackPotentialNPC(container, markerModule, config)
-    if self.activeNPCs[container] then
+    local npc = self.getNPCModel(container)
+    if npc and self.activeNPCs[npc] then
         return
     end
     if self.isNPCModel(container) then
@@ -82,7 +80,7 @@ function NPCManager:trackPotentialNPC(container, markerModule, config)
 
     local connection
     connection = container.ChildAdded:Connect(function(child)
-        if child:IsA("Model") and child.Name == "Male" then
+        if child:IsA("Model") and (child.Name == "Male" or child.Name == "NPCS") then
             self:addNPC(container, markerModule, config)
             if connection then
                 connection:Disconnect()
