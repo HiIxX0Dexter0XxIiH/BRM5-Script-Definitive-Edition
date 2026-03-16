@@ -14,7 +14,7 @@ function NPCManager.getRootPart(model)
            model:FindFirstChild("UpperTorso")
 end
 
--- Gets the inner NPC model. If a valid Male is found, it is renamed to NPCS.
+-- Gets the inner NPC model from Workspace.Model.Male.
 function NPCManager.getNPCModel(container)
     if not container or not container:IsA("Model") or container.Name ~= "Model" then
         return nil
@@ -26,7 +26,7 @@ function NPCManager.getNPCModel(container)
     end
 
     local male = container:FindFirstChild("Male")
-    if male and male:IsA("Model") and not male:FindFirstChildOfClass("BillboardGui") then
+    if male and male:IsA("Model") and not male:FindFirstChildWhichIsA("BillboardGui", true) then
         male.Name = "NPCS"
         return male
     end
