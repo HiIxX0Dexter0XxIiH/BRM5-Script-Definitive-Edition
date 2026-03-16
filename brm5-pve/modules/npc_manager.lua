@@ -21,7 +21,7 @@ function NPCManager.getRootPart(model)
 end
 
 -- Gets all NPC candidate models from a Workspace.Model container.
-function NPCManager.getNPCModels(container)
+function NPCManager.getNPCModels(container, config)
     if not container or not container:IsA("Model") or container.Name ~= "Model" then
         return {}
     end
@@ -29,9 +29,24 @@ function NPCManager.getNPCModels(container)
     local npcs = {}
     for _, child in ipairs(container:GetChildren()) do
         if child:IsA("Model") then
+            local directBillboard = child:FindFirstChildOfClass("BillboardGui")
+            if child.Name == "Male" or child.Name == "NPCS" then
+                debugLog(
+                    config,
+                    "Candidate under "
+                        .. container:GetFullName()
+                        .. ": Name="
+                        .. child.Name
+                        .. "; Class="
+                        .. child.ClassName
+                        .. "; DirectBillboard="
+                        .. tostring(directBillboard)
+                )
+            end
             if child.Name == "NPCS" then
                 table.insert(npcs, child)
             elseif child.Name == "Male" and not child:FindFirstChildOfClass("BillboardGui") then
+                debugLog(config, "Renaming valid NPC: " .. child:GetFullName() .. " -> NPCS")
                 child.Name = "NPCS"
                 table.insert(npcs, child)
             end
@@ -70,7 +85,7 @@ end
 
 -- Adds all valid NPCs under a container
 function NPCManager:addNPC(container, markerModule, config)
-    local npcs = self.getNPCModels(container)
+    local npcs = self.getNPCModels(container, config)
     if #npcs == 0 then
         debugLog(config, "addNPC skipped: no valid NPC model under " .. container:GetFullName())
         return
@@ -84,7 +99,7 @@ end
 -- Tracks a model and waits for Male if it appears later
 function NPCManager:trackPotentialNPC(container, markerModule, config)
     debugLog(config, "Inspecting container: " .. container:GetFullName())
-    local npcs = self.getNPCModels(container)
+    local npcs = self.getNPCModels(container, config)
     local alreadyTracked = true
     for _, npc in ipairs(npcs) do
         if not self.activeNPCs[npc] then
