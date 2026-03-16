@@ -5,7 +5,7 @@ Markers.trackedParts = {} -- List of body parts we are watching
 Markers.enabled = false
 Markers.raycastParams = RaycastParams.new()
 Markers.raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-Markers.activeTransparency = 0.3
+Markers.activeTransparency = 0
 Markers.inactiveTransparency = 1
 
 local function ensureBox(part, name, color)
@@ -28,15 +28,24 @@ local function ensureBox(part, name, color)
     return box
 end
 
+local function setBoxState(part, config, isVisible)
+    local visibleBox = ensureBox(part, "Visible_Marker_Box", (config and config.visibleColor) or Color3.fromRGB(0, 255, 0))
+    local hiddenBox = ensureBox(part, "Hidden_Marker_Box", (config and config.hiddenColor) or Color3.fromRGB(255, 0, 0))
+
+    visibleBox.Color3 = (config and config.visibleColor) or visibleBox.Color3
+    hiddenBox.Color3 = (config and config.hiddenColor) or hiddenBox.Color3
+    visibleBox.Transparency = isVisible and Markers.activeTransparency or Markers.inactiveTransparency
+    hiddenBox.Transparency = isVisible and Markers.inactiveTransparency or Markers.activeTransparency
+
+    return visibleBox, hiddenBox
+end
+
 function Markers.createBoxForPart(part, config)
     if not part then
         return
     end
 
-    local visibleBox = ensureBox(part, "Visible_Marker_Box", (config and config.visibleColor) or Color3.fromRGB(0, 255, 0))
-    local hiddenBox = ensureBox(part, "Hidden_Marker_Box", (config and config.hiddenColor) or Color3.fromRGB(255, 0, 0))
-    visibleBox.Transparency = Markers.activeTransparency
-    hiddenBox.Transparency = Markers.inactiveTransparency
+    setBoxState(part, config, true)
     Markers.trackedParts[part] = true
 end
 
@@ -80,17 +89,12 @@ function Markers.updateColors(npcManager, camera, workspace, localPlayer, config
             break
         end
         if data.head then
-            local visibleBox = ensureBox(data.head, "Visible_Marker_Box", config.visibleColor)
-            local hiddenBox = ensureBox(data.head, "Hidden_Marker_Box", config.hiddenColor)
             rp.FilterDescendantsInstances = {character, data.head}
             
             -- Raycast to check if there is an obstacle between you and the NPC
             local r = workspace:Raycast(origin, data.head.Position - origin, rp)
             local isVisible = not r or r.Instance:IsDescendantOf(model)
-            visibleBox.Color3 = config.visibleColor
-            hiddenBox.Color3 = config.hiddenColor
-            visibleBox.Transparency = isVisible and Markers.activeTransparency or Markers.inactiveTransparency
-            hiddenBox.Transparency = isVisible and Markers.inactiveTransparency or Markers.activeTransparency
+            setBoxState(data.head, config, isVisible)
             processed = processed + 1
         end
     end
