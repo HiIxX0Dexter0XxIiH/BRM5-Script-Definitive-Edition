@@ -7,9 +7,10 @@ if typeof(clear) == "function" then
 end
 
 local GITHUB_BASE = "https://raw.githubusercontent.com/HiIxX0Dexter0XxIiH/BRM5-Script-Definitive-Edition/main/brm5-pve/modules/"
+local CACHE_BUSTER = tostring(os.time())
 
 local function loadModule(moduleName)
-    local url = GITHUB_BASE .. moduleName .. ".lua"
+    local url = GITHUB_BASE .. moduleName .. ".lua?v=" .. CACHE_BUSTER
     print("Loading module: " .. moduleName)
 
     local okResponse, response = pcall(function()
