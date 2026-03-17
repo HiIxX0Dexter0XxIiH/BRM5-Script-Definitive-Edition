@@ -257,18 +257,18 @@ function GUI:init(services, config, callbacks)
     addTabBtn("Credits", tabCredits)
 
     -- COMBAT TAB
-    createButton(tabCombat, "Target Sizing", callbacks.onSizingToggle)
-    createButton(tabCombat, "Show Target Box", callbacks.onShowTargetBoxToggle)
+    createButton(tabCombat, "Silent 🎯", callbacks.onSizingToggle)
+    createButton(tabCombat, "Show HitBox", callbacks.onShowTargetBoxToggle)
 
     -- VISUALS TAB
-    createButton(tabVisuals, "Target Highlights", callbacks.onHighlightsToggle)
-    createButton(tabVisuals, "FullBright", callbacks.onFullBrightToggle)
+    createButton(tabVisuals, "Walls 🔎", callbacks.onHighlightsToggle)
+    createButton(tabVisuals, "FullBright 💡", callbacks.onFullBrightToggle)
 
     -- WEAPONS TAB
     local weaponNote = createLabel(tabWeapons, "Reset character to apply changes", 
                                    Color3.fromRGB(255, 100, 100))
-    createButton(tabWeapons, "Stability Assist", callbacks.onStabilityToggle)
-    createButton(tabWeapons, "Firemode Options", callbacks.onFiremodeOptionsToggle)
+    createButton(tabWeapons, "No recoil", callbacks.onStabilityToggle)
+    createButton(tabWeapons, "All Firemodes", callbacks.onFiremodeOptionsToggle)
 
     -- COLORS TAB
     local layoutIndex = 1
