@@ -71,6 +71,7 @@ function Markers.updateColors(npcManager, camera, workspace, localPlayer, config
     if not Markers.enabled then 
         return 
     end
+    camera = camera or (workspace and workspace.CurrentCamera)
     if not camera or not localPlayer then
         return
     end

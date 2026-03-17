@@ -170,7 +170,7 @@ table.insert(runtimeConnections, Services.RunService.Heartbeat:Connect(function(
 
     markerAccumulator = markerAccumulator + dt
     if markerAccumulator >= Config.RAYCAST_COOLDOWN then
-        Markers.updateColors(NPCManager, Services.camera, Services.Workspace, Services.localPlayer, Config)
+        Markers.updateColors(NPCManager, Services.Workspace.CurrentCamera or Services.camera, Services.Workspace, Services.localPlayer, Config)
         markerAccumulator = 0
     end
 
