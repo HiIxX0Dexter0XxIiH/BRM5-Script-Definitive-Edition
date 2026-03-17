@@ -5,15 +5,9 @@ Markers.trackedParts = {} -- List of body parts we are watching
 Markers.enabled = false
 Markers.raycastParams = RaycastParams.new()
 Markers.raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-Markers.activeTransparency = 0
-Markers.inactiveTransparency = 1
+Markers.boxTransparency = 0.3
 
-local function isTargetVisible(camera, workspace, origin, model, head, character, raycastParams)
-    if camera and typeof(camera.GetPartsObscuringTarget) == "function" then
-        local obscuringParts = camera:GetPartsObscuringTarget({head.Position}, {character, model})
-        return #obscuringParts == 0
-    end
-
+local function isTargetVisible(workspace, origin, model, head, character, raycastParams)
     raycastParams.FilterDescendantsInstances = {character, head}
     local result = workspace:Raycast(origin, head.Position - origin, raycastParams)
     if not result then
@@ -23,36 +17,24 @@ local function isTargetVisible(camera, workspace, origin, model, head, character
     return result.Instance:IsDescendantOf(model)
 end
 
-local function ensureBox(part, name, color)
-    local box = part:FindFirstChild(name)
+local function ensureBox(part, color)
+    local box = part:FindFirstChild("Marker_Box")
     if box then
         box.Color3 = color
         return box
     end
 
     local box = Instance.new("BoxHandleAdornment")
-    box.Name = name
+    box.Name = "Marker_Box"
     box.Size = part.Size + Vector3.new(0.1, 0.1, 0.1)
     box.Adornee = part
     box.AlwaysOnTop = true
     box.ZIndex = 10
     box.Color3 = color
-    box.Transparency = Markers.inactiveTransparency
+    box.Transparency = Markers.boxTransparency
     box.Parent = part
 
     return box
-end
-
-local function setBoxState(part, config, isVisible)
-    local visibleBox = ensureBox(part, "Visible_Marker_Box", (config and config.visibleColor) or Color3.fromRGB(0, 255, 0))
-    local hiddenBox = ensureBox(part, "Hidden_Marker_Box", (config and config.hiddenColor) or Color3.fromRGB(255, 0, 0))
-
-    visibleBox.Color3 = (config and config.visibleColor) or visibleBox.Color3
-    hiddenBox.Color3 = (config and config.hiddenColor) or hiddenBox.Color3
-    visibleBox.Transparency = isVisible and Markers.activeTransparency or Markers.inactiveTransparency
-    hiddenBox.Transparency = isVisible and Markers.inactiveTransparency or Markers.activeTransparency
-
-    return visibleBox, hiddenBox
 end
 
 function Markers.createBoxForPart(part, config)
@@ -60,7 +42,7 @@ function Markers.createBoxForPart(part, config)
         return
     end
 
-    setBoxState(part, config, true)
+    ensureBox(part, (config and config.visibleColor) or Color3.fromRGB(0, 255, 0))
     Markers.trackedParts[part] = true
 end
 
@@ -68,13 +50,9 @@ end
 function Markers.destroyAllBoxes()
     for part, _ in pairs(Markers.trackedParts) do
         if part then
-            local visibleBox = part:FindFirstChild("Visible_Marker_Box")
-            local hiddenBox = part:FindFirstChild("Hidden_Marker_Box")
-            if visibleBox then
-                pcall(function() visibleBox:Destroy() end)
-            end
-            if hiddenBox then
-                pcall(function() hiddenBox:Destroy() end)
+            local box = part:FindFirstChild("Marker_Box")
+            if box then
+                pcall(function() box:Destroy() end)
             end
         end
     end
@@ -104,9 +82,10 @@ function Markers.updateColors(npcManager, camera, workspace, localPlayer, config
         if processed >= maxPerStep then
             break
         end
-        if data.head then
-            local isVisible = isTargetVisible(camera, workspace, origin, model, data.head, character, rp)
-            setBoxState(data.head, config, isVisible)
+        if data.head and data.head:FindFirstChild("Marker_Box") then
+            local isVisible = isTargetVisible(workspace, origin, model, data.head, character, rp)
+            data.head.Marker_Box.Color3 = isVisible and config.visibleColor or config.hiddenColor
+            data.head.Marker_Box.Transparency = Markers.boxTransparency
             processed = processed + 1
         end
     end
