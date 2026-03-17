@@ -72,12 +72,8 @@ function Markers.updateColors(npcManager, camera, workspace, localPlayer, config
         return
     end
     local character = localPlayer.Character
-    if not character then
-        if config and config.debugMarkers and (os.clock() - Markers.lastDebugAt) >= 1 then
-            Markers.lastDebugAt = os.clock()
-            debugLog(config, "updateColors skipped: local character missing")
-        end
-        return
+    if not character and camera.CameraSubject then
+        character = camera.CameraSubject:FindFirstAncestorOfClass("Model")
     end
 
     local processed = 0
@@ -91,7 +87,7 @@ function Markers.updateColors(npcManager, camera, workspace, localPlayer, config
         if data.head and data.head:FindFirstChild("Marker_Box") then
             local rp = RaycastParams.new()
             rp.FilterType = Enum.RaycastFilterType.Blacklist
-            rp.FilterDescendantsInstances = {character, data.head}
+            rp.FilterDescendantsInstances = character and {character, data.head} or {data.head}
 
             local result = workspace:Raycast(origin, data.head.Position - origin, rp)
             local isVisible = (not result or result.Instance:IsDescendantOf(model))
