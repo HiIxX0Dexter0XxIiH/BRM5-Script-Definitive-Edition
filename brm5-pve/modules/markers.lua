@@ -8,6 +8,21 @@ Markers.raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
 Markers.activeTransparency = 0
 Markers.inactiveTransparency = 1
 
+local function isTargetVisible(camera, workspace, origin, model, head, character, raycastParams)
+    if camera and typeof(camera.GetPartsObscuringTarget) == "function" then
+        local obscuringParts = camera:GetPartsObscuringTarget({head.Position}, {character, model})
+        return #obscuringParts == 0
+    end
+
+    raycastParams.FilterDescendantsInstances = {character, head}
+    local result = workspace:Raycast(origin, head.Position - origin, raycastParams)
+    if not result then
+        return true
+    end
+
+    return result.Instance:IsDescendantOf(model)
+end
+
 local function ensureBox(part, name, color)
     local box = part:FindFirstChild(name)
     if box then
@@ -90,11 +105,7 @@ function Markers.updateColors(npcManager, camera, workspace, localPlayer, config
             break
         end
         if data.head then
-            rp.FilterDescendantsInstances = {character, data.head}
-            
-            -- Raycast to check if there is an obstacle between you and the NPC
-            local r = workspace:Raycast(origin, data.head.Position - origin, rp)
-            local isVisible = not r or r.Instance:IsDescendantOf(model)
+            local isVisible = isTargetVisible(camera, workspace, origin, model, data.head, character, rp)
             setBoxState(data.head, config, isVisible)
             processed = processed + 1
         end
