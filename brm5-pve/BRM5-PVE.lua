@@ -203,7 +203,7 @@ end)
 local title = Instance.new("TextLabel", topBar)
 title.Size = UDim2.new(1, -20, 1, 0)
 title.Position = UDim2.new(0, 10, 0, 0)
-title.Text = "BRM5 v6.5 🎇"
+title.Text = "BRM5 BETA Vercion Unreleased 🎇"
 title.Font = "GothamBold"
 title.TextColor3 = Color3.fromRGB(85, 170, 255)
 title.TextSize = 16
