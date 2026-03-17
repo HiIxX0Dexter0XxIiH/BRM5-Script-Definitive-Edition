@@ -1,6 +1,8 @@
 
 local Markers = {}
 
+print("[Markers] VERSION verify-2026-03-16-b")
+
 Markers.trackedParts = {} -- List of body parts we are watching
 Markers.enabled = false
 Markers.boxTransparency = 0.3
