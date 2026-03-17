@@ -170,7 +170,17 @@ table.insert(runtimeConnections, Services.RunService.Heartbeat:Connect(function(
 
     markerAccumulator = markerAccumulator + dt
     if markerAccumulator >= Config.RAYCAST_COOLDOWN then
-        Markers.updateColors(NPCManager, Services.Workspace.CurrentCamera or Services.camera, Services.Workspace, Services.localPlayer, Config)
+        local okMarkers, markerError = pcall(
+            Markers.updateColors,
+            NPCManager,
+            Services.Workspace.CurrentCamera or Services.camera,
+            Services.Workspace,
+            Services.localPlayer,
+            Config
+        )
+        if not okMarkers then
+            warn("Markers.updateColors failed: " .. tostring(markerError))
+        end
         markerAccumulator = 0
     end
 
