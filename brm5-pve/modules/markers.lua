@@ -3,19 +3,7 @@ local Markers = {}
 
 Markers.trackedParts = {} -- List of body parts we are watching
 Markers.enabled = false
-Markers.raycastParams = RaycastParams.new()
-Markers.raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
 Markers.boxTransparency = 0.3
-
-local function isTargetVisible(workspace, origin, model, head, character, raycastParams)
-    raycastParams.FilterDescendantsInstances = {character, head}
-    local result = workspace:Raycast(origin, head.Position - origin, raycastParams)
-    if not result then
-        return true
-    end
-
-    return result.Instance:IsDescendantOf(model)
-end
 
 local function ensureBox(part, color)
     local box = part:FindFirstChild("Marker_Box")
@@ -76,15 +64,20 @@ function Markers.updateColors(npcManager, camera, workspace, localPlayer, config
     local processed = 0
     local maxPerStep = config.MARKER_MAX_PER_STEP or 12
     local origin = camera.CFrame.Position
-    local rp = Markers.raycastParams
 
     for model, data in pairs(npcManager:getActiveNPCs()) do
         if processed >= maxPerStep then
             break
         end
         if data.head and data.head:FindFirstChild("Marker_Box") then
-            local isVisible = isTargetVisible(workspace, origin, model, data.head, character, rp)
-            data.head.Marker_Box.Color3 = isVisible and config.visibleColor or config.hiddenColor
+            local rp = RaycastParams.new()
+            rp.FilterType = Enum.RaycastFilterType.Blacklist
+            rp.FilterDescendantsInstances = {character, data.head}
+
+            local result = workspace:Raycast(origin, data.head.Position - origin, rp)
+            data.head.Marker_Box.Color3 = (not result or result.Instance:IsDescendantOf(model))
+                and config.visibleColor
+                or config.hiddenColor
             data.head.Marker_Box.Transparency = Markers.boxTransparency
             processed = processed + 1
         end
