@@ -57,14 +57,26 @@ end
 -- Updates marker colors based on line of sight
 function Markers.updateColors(npcManager, camera, workspace, localPlayer, config)
     if not Markers.enabled then 
+        if config and config.debugMarkers and (os.clock() - Markers.lastDebugAt) >= 1 then
+            Markers.lastDebugAt = os.clock()
+            debugLog(config, "updateColors skipped: markers disabled")
+        end
         return 
     end
     camera = camera or (workspace and workspace.CurrentCamera)
     if not camera or not localPlayer then
+        if config and config.debugMarkers and (os.clock() - Markers.lastDebugAt) >= 1 then
+            Markers.lastDebugAt = os.clock()
+            debugLog(config, "updateColors skipped: missing camera or localPlayer")
+        end
         return
     end
     local character = localPlayer.Character
     if not character then
+        if config and config.debugMarkers and (os.clock() - Markers.lastDebugAt) >= 1 then
+            Markers.lastDebugAt = os.clock()
+            debugLog(config, "updateColors skipped: local character missing")
+        end
         return
     end
 
@@ -95,6 +107,11 @@ function Markers.updateColors(npcManager, camera, workspace, localPlayer, config
             end
             processed = processed + 1
         end
+    end
+
+    if processed == 0 and config and config.debugMarkers and (os.clock() - Markers.lastDebugAt) >= 1 then
+        Markers.lastDebugAt = os.clock()
+        debugLog(config, "updateColors ran but processed 0 NPCs")
     end
 end
 
