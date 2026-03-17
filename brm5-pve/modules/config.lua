@@ -17,6 +17,7 @@ Config.fullBrightEnabled = false -- Removes shadows/darkness
 Config.guiVisible = true         -- Menu visibility
 Config.isUnloaded = false        -- To stop the script
 Config.debugNPCDetection = true  -- Prints NPC detection flow to console
+Config.debugMarkers = true       -- Prints marker raycast results to console
 
 -- WEAPON PATCHES
 Config.patchOptions = { 

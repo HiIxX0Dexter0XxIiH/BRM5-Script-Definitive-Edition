@@ -4,6 +4,13 @@ local Markers = {}
 Markers.trackedParts = {} -- List of body parts we are watching
 Markers.enabled = false
 Markers.boxTransparency = 0.3
+Markers.lastDebugAt = 0
+
+local function debugLog(config, message)
+    if config and config.debugMarkers then
+        print("[Markers] " .. message)
+    end
+end
 
 local function ensureBox(part, color)
     local box = part:FindFirstChild("Marker_Box")
@@ -75,10 +82,17 @@ function Markers.updateColors(npcManager, camera, workspace, localPlayer, config
             rp.FilterDescendantsInstances = {character, data.head}
 
             local result = workspace:Raycast(origin, data.head.Position - origin, rp)
-            data.head.Marker_Box.Color3 = (not result or result.Instance:IsDescendantOf(model))
+            local isVisible = (not result or result.Instance:IsDescendantOf(model))
+            data.head.Marker_Box.Color3 = isVisible
                 and config.visibleColor
                 or config.hiddenColor
             data.head.Marker_Box.Transparency = Markers.boxTransparency
+
+            if config and config.debugMarkers and (os.clock() - Markers.lastDebugAt) >= 1 then
+                Markers.lastDebugAt = os.clock()
+                local hitName = result and result.Instance and result.Instance:GetFullName() or "nil"
+                debugLog(config, "Target=" .. model:GetFullName() .. "; Hit=" .. hitName .. "; Visible=" .. tostring(isVisible))
+            end
             processed = processed + 1
         end
     end
