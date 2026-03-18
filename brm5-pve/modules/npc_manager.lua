@@ -90,7 +90,7 @@ function NPCManager:getNPCModel(container, workspace, config)
 
     local male = container:FindFirstChild("Male")
     if male and male:IsA("Model") then
-        local hasBillboard = male:FindFirstChildWhichIsA("BillboardGui", true) ~= nil
+        local hasBillboard = male:FindFirstChildOfClass("BillboardGui") ~= nil
         debugLog(
             config,
             "Found nested Male: " .. male:GetFullName()
@@ -99,7 +99,7 @@ function NPCManager:getNPCModel(container, workspace, config)
     end
     if male
         and male:IsA("Model")
-        and not male:FindFirstChildWhichIsA("BillboardGui", true)
+        and not male:FindFirstChildOfClass("BillboardGui")
         and self:isWithinDetectionRadius(male, workspace, config) then
         debugLog(config, "Renaming nested Male -> NPCS: " .. male:GetFullName())
         male.Name = "NPCS"
