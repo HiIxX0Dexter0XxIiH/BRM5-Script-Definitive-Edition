@@ -63,8 +63,6 @@ end
 Lighting:storeOriginalSettings(Services.Lighting)
 
 local runtimeConnections = {}
-local previousMouseBehavior = Services.UserInputService.MouseBehavior
-local previousMouseIconEnabled = Services.UserInputService.MouseIconEnabled
 
 local function syncMouseState()
     if Config.guiVisible then
@@ -73,8 +71,8 @@ local function syncMouseState()
         return
     end
 
-    Services.UserInputService.MouseBehavior = previousMouseBehavior
-    Services.UserInputService.MouseIconEnabled = previousMouseIconEnabled
+    Services.UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+    Services.UserInputService.MouseIconEnabled = false
 end
 
 local function disconnectRuntimeConnections()
