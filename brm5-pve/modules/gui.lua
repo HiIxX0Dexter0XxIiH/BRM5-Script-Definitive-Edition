@@ -5,6 +5,7 @@ local GUI = {}
 
 GUI.screenGui = nil
 GUI.mainFrame = nil
+GUI.modalOverlay = nil
 GUI.tabButtons = {}
 GUI.tabs = {}
 
@@ -124,6 +125,21 @@ function GUI:init(services, config, callbacks)
     self.screenGui.Name = "BRM5_V6_Final"
     self.screenGui.ResetOnSpawn = false
     self.screenGui.DisplayOrder = 9999
+    self.screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+    local modalOverlay = Instance.new("TextButton", self.screenGui)
+    modalOverlay.Name = "ModalOverlay"
+    modalOverlay.Size = UDim2.fromScale(1, 1)
+    modalOverlay.Position = UDim2.fromScale(0, 0)
+    modalOverlay.BackgroundTransparency = 1
+    modalOverlay.BorderSizePixel = 0
+    modalOverlay.Text = ""
+    modalOverlay.AutoButtonColor = false
+    modalOverlay.Modal = true
+    modalOverlay.Active = true
+    modalOverlay.Visible = config.guiVisible
+    modalOverlay.ZIndex = 0
+    self.modalOverlay = modalOverlay
 
     -- Main Window Frame
     local main = Instance.new("Frame", self.screenGui)
@@ -132,6 +148,8 @@ function GUI:init(services, config, callbacks)
     main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     main.BorderSizePixel = 0
     main.Active = true
+    main.Visible = config.guiVisible
+    main.ZIndex = 1
     Instance.new("UICorner", main).CornerRadius = UDim.new(0, 8)
     self.mainFrame = main
 
@@ -322,6 +340,9 @@ end
 function GUI:toggleVisibility()
     if self.mainFrame then
         self.mainFrame.Visible = not self.mainFrame.Visible
+        if self.modalOverlay then
+            self.modalOverlay.Visible = self.mainFrame.Visible
+        end
         return self.mainFrame.Visible
     end
     return false
@@ -332,6 +353,9 @@ function GUI:destroy()
     if self.screenGui then
         self.screenGui:Destroy()
     end
+    self.screenGui = nil
+    self.mainFrame = nil
+    self.modalOverlay = nil
 end
 
 return GUI
