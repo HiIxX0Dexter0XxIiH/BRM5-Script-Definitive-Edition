@@ -64,6 +64,19 @@ end
 Lighting:storeOriginalSettings(Services.Lighting)
 
 local runtimeConnections = {}
+local previousMouseBehavior = Services.UserInputService.MouseBehavior
+local previousMouseIconEnabled = Services.UserInputService.MouseIconEnabled
+
+local function syncMouseState()
+    if Config.guiVisible then
+        Services.UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+        Services.UserInputService.MouseIconEnabled = true
+        return
+    end
+
+    Services.UserInputService.MouseBehavior = previousMouseBehavior
+    Services.UserInputService.MouseIconEnabled = previousMouseIconEnabled
+end
 
 local function disconnectRuntimeConnections()
     for _, connection in ipairs(runtimeConnections) do
@@ -148,12 +161,15 @@ local callbacks = {
         TargetSizing:cleanup(NPCManager)
         NPCManager:cleanup()
         Lighting:restoreOriginal(Services.Lighting)
+        Config.guiVisible = false
+        syncMouseState()
         GUI:destroy()
         print("Script unloaded successfully!")
     end
 }
 
 GUI:init(Services, Config, callbacks)
+syncMouseState()
 
 NPCManager:scanWorkspace(Services.Workspace, Markers, Config)
 NPCManager:setupListener(Services.Workspace, Markers, Config)
@@ -166,6 +182,7 @@ table.insert(runtimeConnections, Services.RunService.Heartbeat:Connect(function(
         return
     end
 
+    syncMouseState()
     Lighting:update(Services.Lighting, Config)
 
     markerAccumulator = markerAccumulator + dt
@@ -198,6 +215,7 @@ table.insert(runtimeConnections, Services.UserInputService.InputBegan:Connect(fu
 
     if not gameProcessed and input.KeyCode == Enum.KeyCode.Insert then
         Config.guiVisible = GUI:toggleVisibility()
+        syncMouseState()
     end
 end))
 
