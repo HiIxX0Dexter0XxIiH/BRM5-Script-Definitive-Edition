@@ -50,10 +50,10 @@ end
 local Services = loadModule("services")
 local Config = loadModule("config")
 local NPCManager = loadModule("npc_manager")
-local TargetSizing = loadModule("target_sizing")
-local Markers = loadModule("markers")
-local Lighting = loadModule("lighting")
-local Weapons = loadModule("weapons")
+local TargetSizing = loadModule("silent")
+local Markers = loadModule("walls")
+local Lighting = loadModule("fullbright")
+local Weapons = loadModule("norecoil")
 local GUI = loadModule("gui")
 
 if not (Services and Config and NPCManager and TargetSizing and Markers and Lighting and Weapons and GUI) then
