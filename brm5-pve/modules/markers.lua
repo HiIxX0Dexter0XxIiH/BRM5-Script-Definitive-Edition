@@ -1,18 +1,9 @@
 
 local Markers = {}
 
-print("[Markers] VERSION verify-2026-03-16-b")
-
 Markers.trackedParts = {} -- List of body parts we are watching
 Markers.enabled = false
 Markers.boxTransparency = 0.3
-Markers.lastDebugAt = 0
-
-local function debugLog(config, message)
-    if config and config.debugMarkers then
-        print("[Markers] " .. message)
-    end
-end
 
 local function ensureBox(part, color)
     local box = part:FindFirstChild("Marker_Box")
@@ -43,6 +34,18 @@ function Markers.createBoxForPart(part, config)
     Markers.trackedParts[part] = true
 end
 
+function Markers.destroyBoxForPart(part)
+    if not part then
+        return
+    end
+
+    local box = part:FindFirstChild("Marker_Box")
+    if box then
+        pcall(function() box:Destroy() end)
+    end
+    Markers.trackedParts[part] = nil
+end
+
 -- Removes all marker boxes
 function Markers.destroyAllBoxes()
     for part, _ in pairs(Markers.trackedParts) do
@@ -59,18 +62,10 @@ end
 -- Updates marker colors based on line of sight
 function Markers.updateColors(npcManager, camera, workspace, localPlayer, config)
     if not Markers.enabled then 
-        if config and config.debugMarkers and (os.clock() - Markers.lastDebugAt) >= 1 then
-            Markers.lastDebugAt = os.clock()
-            debugLog(config, "updateColors skipped: markers disabled")
-        end
         return 
     end
     camera = camera or (workspace and workspace.CurrentCamera)
     if not camera or not localPlayer then
-        if config and config.debugMarkers and (os.clock() - Markers.lastDebugAt) >= 1 then
-            Markers.lastDebugAt = os.clock()
-            debugLog(config, "updateColors skipped: missing camera or localPlayer")
-        end
         return
     end
     local character = localPlayer.Character
@@ -97,19 +92,8 @@ function Markers.updateColors(npcManager, camera, workspace, localPlayer, config
                 and config.visibleColor
                 or config.hiddenColor
             data.head.Marker_Box.Transparency = Markers.boxTransparency
-
-            if config and config.debugMarkers and (os.clock() - Markers.lastDebugAt) >= 1 then
-                Markers.lastDebugAt = os.clock()
-                local hitName = result and result.Instance and result.Instance:GetFullName() or "nil"
-                debugLog(config, "Target=" .. model:GetFullName() .. "; Hit=" .. hitName .. "; Visible=" .. tostring(isVisible))
-            end
             processed = processed + 1
         end
-    end
-
-    if processed == 0 and config and config.debugMarkers and (os.clock() - Markers.lastDebugAt) >= 1 then
-        Markers.lastDebugAt = os.clock()
-        debugLog(config, "updateColors ran but processed 0 NPCs")
     end
 end
 

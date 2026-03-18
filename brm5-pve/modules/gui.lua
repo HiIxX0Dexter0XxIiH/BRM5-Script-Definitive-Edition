@@ -63,7 +63,7 @@ local function createLabel(parent, text, color, layoutIndex)
 end
 
 -- Creates a slider
-local function createSlider(parent, label, initialValue, callback, layoutIndex, services)
+local function createSlider(parent, label, initialValue, maxValue, callback, layoutIndex, services)
     local f = Instance.new("Frame", parent)
     f.Size = UDim2.new(1, -10, 0, 50)
     f.BackgroundTransparency = 1
@@ -84,14 +84,14 @@ local function createSlider(parent, label, initialValue, callback, layoutIndex, 
     bar.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 
     local fill = Instance.new("Frame", bar)
-    fill.Size = UDim2.new(initialValue / 255, 0, 1, 0)
+    fill.Size = UDim2.new(maxValue > 0 and (initialValue / maxValue) or 0, 0, 1, 0)
     fill.BackgroundColor3 = Color3.fromRGB(85, 170, 255)
 
     local dragging = false
     local function update()
         local mousePos = services.UserInputService:GetMouseLocation().X
         local p = math.clamp((mousePos - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
-        local val = math.floor(p * 255)
+        local val = math.floor(p * maxValue)
         fill.Size = UDim2.new(p, 0, 1, 0)
         l.Text = label .. ": " .. val
         callback(val)
@@ -305,6 +305,15 @@ function GUI:init(services, config, callbacks)
     -- VISUALS TAB
     createButton(tabVisuals, "Walls 🔎", callbacks.onHighlightsToggle)
     createButton(tabVisuals, "FullBright 💡", callbacks.onFullBrightToggle)
+    createSlider(
+        tabVisuals,
+        "NPC Range",
+        config.npcDetectionRadius,
+        config.MAX_NPC_DETECTION_RADIUS,
+        callbacks.onNPCDetectionRadiusChange,
+        nil,
+        services
+    )
 
     -- WEAPONS TAB
     local weaponNote = createLabel(tabWeapons, "Reset character to apply changes", 
@@ -317,21 +326,21 @@ function GUI:init(services, config, callbacks)
     createLabel(tabColors, "-- VISIBLE COLOR --", Color3.new(0.5, 1, 0.5), layoutIndex)
     layoutIndex = layoutIndex + 1
     
-    createSlider(tabColors, "R", config.visibleR, callbacks.onVisibleRChange, layoutIndex, services)
+    createSlider(tabColors, "R", config.visibleR, 255, callbacks.onVisibleRChange, layoutIndex, services)
     layoutIndex = layoutIndex + 1
-    createSlider(tabColors, "G", config.visibleG, callbacks.onVisibleGChange, layoutIndex, services)
+    createSlider(tabColors, "G", config.visibleG, 255, callbacks.onVisibleGChange, layoutIndex, services)
     layoutIndex = layoutIndex + 1
-    createSlider(tabColors, "B", config.visibleB, callbacks.onVisibleBChange, layoutIndex, services)
+    createSlider(tabColors, "B", config.visibleB, 255, callbacks.onVisibleBChange, layoutIndex, services)
     layoutIndex = layoutIndex + 1
 
     createLabel(tabColors, "-- HIDDEN COLOR --", Color3.new(1, 0.5, 0.5), layoutIndex)
     layoutIndex = layoutIndex + 1
     
-    createSlider(tabColors, "R", config.hiddenR, callbacks.onHiddenRChange, layoutIndex, services)
+    createSlider(tabColors, "R", config.hiddenR, 255, callbacks.onHiddenRChange, layoutIndex, services)
     layoutIndex = layoutIndex + 1
-    createSlider(tabColors, "G", config.hiddenG, callbacks.onHiddenGChange, layoutIndex, services)
+    createSlider(tabColors, "G", config.hiddenG, 255, callbacks.onHiddenGChange, layoutIndex, services)
     layoutIndex = layoutIndex + 1
-    createSlider(tabColors, "B", config.hiddenB, callbacks.onHiddenBChange, layoutIndex, services)
+    createSlider(tabColors, "B", config.hiddenB, 255, callbacks.onHiddenBChange, layoutIndex, services)
 
     -- CREDITS TAB
     local function addCredit(text, font)

@@ -1,7 +1,6 @@
 -- Main Script (BRM5 PVE)
 -- Coordinates all modules
 
-print("Starting BRM5 PVE Script...")
 if typeof(clear) == "function" then
     clear()
 end
@@ -11,7 +10,6 @@ local CACHE_BUSTER = tostring(os.time())
 
 local function loadModule(moduleName)
     local url = GITHUB_BASE .. moduleName .. ".lua?v=" .. CACHE_BUSTER
-    print("Loading module: " .. moduleName)
 
     local okResponse, response = pcall(function()
         return game:HttpGet(url)
@@ -93,14 +91,17 @@ local callbacks = {
         if not enabled then
             TargetSizing:cleanup(NPCManager)
         end
+        NPCManager:refreshTrackedNPCs(Services.Workspace, Markers, TargetSizing, Config)
     end,
 
     onShowTargetBoxToggle = function(enabled)
         Config.showTargetBox = enabled
+        NPCManager:refreshTrackedNPCs(Services.Workspace, Markers, TargetSizing, Config)
     end,
 
     onHighlightsToggle = function(enabled)
         Config.highlightEnabled = enabled
+        NPCManager:refreshTrackedNPCs(Services.Workspace, Markers, TargetSizing, Config)
         if enabled then
             Markers.enable(NPCManager, Config)
         else
@@ -149,12 +150,16 @@ local callbacks = {
         Config:updateHiddenColor(nil, nil, value)
     end,
 
+    onNPCDetectionRadiusChange = function(value)
+        Config:updateNPCDetectionRadius(value)
+        NPCManager:refreshTrackedNPCs(Services.Workspace, Markers, TargetSizing, Config)
+    end,
+
     onUnload = function()
         if Config.isUnloaded then
             return
         end
 
-        print("Unloading BRM5 PVE Script...")
         Config.isUnloaded = true
         disconnectRuntimeConnections()
         Markers.disable()
@@ -164,7 +169,6 @@ local callbacks = {
         Config.guiVisible = false
         syncMouseState()
         GUI:destroy()
-        print("Script unloaded successfully!")
     end
 }
 
@@ -176,6 +180,7 @@ NPCManager:setupListener(Services.Workspace, Markers, Config)
 
 local markerAccumulator = 0
 local targetAccumulator = 0
+local npcAccumulator = 0
 
 table.insert(runtimeConnections, Services.RunService.Heartbeat:Connect(function(dt)
     if Config.isUnloaded then
@@ -184,6 +189,12 @@ table.insert(runtimeConnections, Services.RunService.Heartbeat:Connect(function(
 
     syncMouseState()
     Lighting:update(Services.Lighting, Config)
+
+    npcAccumulator = npcAccumulator + dt
+    if npcAccumulator >= Config.NPC_REFRESH_INTERVAL then
+        NPCManager:refreshTrackedNPCs(Services.Workspace, Markers, TargetSizing, Config)
+        npcAccumulator = 0
+    end
 
     markerAccumulator = markerAccumulator + dt
     if markerAccumulator >= Config.RAYCAST_COOLDOWN then
@@ -218,6 +229,3 @@ table.insert(runtimeConnections, Services.UserInputService.InputBegan:Connect(fu
         syncMouseState()
     end
 end))
-
-print("BRM5 PVE Script loaded successfully!")
-print("Press INSERT to toggle menu")

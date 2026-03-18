@@ -7,7 +7,10 @@ local Config = {}
 Config.RAYCAST_COOLDOWN = 0.2
 Config.MARKER_MAX_PER_STEP = 12
 Config.TARGET_SYNC_INTERVAL = 0.25
+Config.NPC_REFRESH_INTERVAL = 0.5
 Config.TARGET_BOX_SIZE = Vector3.new(15, 15, 15) -- Size of the adjusted target bounds
+Config.MAX_NPC_DETECTION_RADIUS = 3000
+Config.npcDetectionRadius = 1500
 
 -- TOGGLES (State)
 Config.highlightEnabled = false  -- Visibility markers
@@ -16,8 +19,6 @@ Config.showTargetBox = false     -- Shows target bounds
 Config.fullBrightEnabled = false -- Removes shadows/darkness
 Config.guiVisible = true         -- Menu visibility
 Config.isUnloaded = false        -- To stop the script
-Config.debugNPCDetection = true  -- Prints NPC detection flow to console
-Config.debugMarkers = true       -- Prints marker raycast results to console
 
 -- WEAPON PATCHES
 Config.patchOptions = { 
@@ -44,6 +45,18 @@ function Config:updateHiddenColor(r, g, b)
     if g then self.hiddenG = g end
     if b then self.hiddenB = b end
     self.hiddenColor = Color3.fromRGB(self.hiddenR, self.hiddenG, self.hiddenB)
+end
+
+function Config:updateNPCDetectionRadius(value)
+    self.npcDetectionRadius = math.clamp(
+        math.floor(value or self.npcDetectionRadius),
+        0,
+        self.MAX_NPC_DETECTION_RADIUS
+    )
+end
+
+function Config:isNPCDetectionEnabled()
+    return self.sizingEnabled or self.showTargetBox or self.highlightEnabled
 end
 
 return Config
