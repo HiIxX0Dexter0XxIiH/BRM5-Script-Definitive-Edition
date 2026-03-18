@@ -22,13 +22,6 @@ function NPCManager.getRootPart(model)
            model:FindFirstChild("UpperTorso")
 end
 
-function NPCManager:isCandidateNPCModel(model)
-    return model
-        and model:IsA("Model")
-        and (model.Name == "Male" or model.Name == "NPCS")
-        and not model:FindFirstChildWhichIsA("BillboardGui", true)
-end
-
 function NPCManager:getDetectionOrigin(workspace)
     local character = localPlayer and localPlayer.Character
     local root = character and self.getRootPart(character)
@@ -68,7 +61,7 @@ function NPCManager:isWithinDetectionRadius(model, workspace, config)
     return inRange
 end
 
--- Gets the NPC model either from Workspace.Model.Male/NPCS or direct Workspace.Male/NPCS.
+-- Gets the NPC model from Workspace.Model.Male/NPCS.
 function NPCManager:getNPCModel(container, workspace, config)
     if not (config and config.isNPCDetectionEnabled and config:isNPCDetectionEnabled()) then
         return nil
@@ -80,18 +73,6 @@ function NPCManager:getNPCModel(container, workspace, config)
 
     if config and config.debugNPCDetection then
         debugLog(config, "Inspecting container: " .. container:GetFullName() .. " | name=" .. container.Name)
-    end
-
-    if self:isCandidateNPCModel(container) then
-        debugLog(config, "Direct candidate found: " .. container:GetFullName())
-    end
-    if self:isCandidateNPCModel(container) and self:isWithinDetectionRadius(container, workspace, config) then
-        if container.Name == "Male" then
-            debugLog(config, "Renaming direct Male -> NPCS: " .. container:GetFullName())
-            container.Name = "NPCS"
-        end
-        debugLog(config, "Accepted direct NPC: " .. container:GetFullName())
-        return container
     end
 
     if container.Name ~= "Model" then
@@ -257,7 +238,7 @@ function NPCManager:refreshTrackedNPCs(workspace, markerModule, targetSizing, co
     end
 
     for _, container in ipairs(workspace:GetChildren()) do
-        if container:IsA("Model") then
+        if container:IsA("Model") and container.Name == "Model" then
             self:trackPotentialNPC(container, workspace, markerModule, config)
         end
     end
@@ -266,7 +247,7 @@ end
 -- Scans workspace for existing NPCs
 function NPCManager:scanWorkspace(workspace, markerModule, config)
     for _, m in ipairs(workspace:GetChildren()) do
-        if m:IsA("Model") then 
+        if m:IsA("Model") and m.Name == "Model" then 
             self:trackPotentialNPC(m, workspace, markerModule, config)
         end
     end
@@ -275,7 +256,7 @@ end
 -- Sets up listener for new NPCs
 function NPCManager:setupListener(workspace, markerModule, config)
     local connection = workspace.ChildAdded:Connect(function(m)
-        if m:IsA("Model") then 
+        if m:IsA("Model") and m.Name == "Model" then 
             task.delay(0.2, function() 
                 self:trackPotentialNPC(m, workspace, markerModule, config)
             end) 
