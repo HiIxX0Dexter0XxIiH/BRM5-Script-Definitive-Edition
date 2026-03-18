@@ -65,6 +65,12 @@ local runtimeConnections = {}
 local previousMouseBehavior = Services.UserInputService.MouseBehavior
 local previousMouseIconEnabled = Services.UserInputService.MouseIconEnabled
 
+local function debugNPCState(message)
+    if Config.debugNPCDetection then
+        print("[Main] " .. message)
+    end
+end
+
 local function syncMouseState()
     if Config.guiVisible then
         Services.UserInputService.MouseBehavior = Enum.MouseBehavior.Default
@@ -88,6 +94,7 @@ end
 local callbacks = {
     onSizingToggle = function(enabled)
         Config.sizingEnabled = enabled
+        debugNPCState("Silent=" .. tostring(enabled))
         if not enabled then
             TargetSizing:cleanup(NPCManager)
         end
@@ -96,11 +103,13 @@ local callbacks = {
 
     onShowTargetBoxToggle = function(enabled)
         Config.showTargetBox = enabled
+        debugNPCState("Show HitBox=" .. tostring(enabled))
         NPCManager:refreshTrackedNPCs(Services.Workspace, Markers, TargetSizing, Config)
     end,
 
     onHighlightsToggle = function(enabled)
         Config.highlightEnabled = enabled
+        debugNPCState("Walls=" .. tostring(enabled))
         NPCManager:refreshTrackedNPCs(Services.Workspace, Markers, TargetSizing, Config)
         if enabled then
             Markers.enable(NPCManager, Config)
@@ -152,6 +161,7 @@ local callbacks = {
 
     onNPCDetectionRadiusChange = function(value)
         Config:updateNPCDetectionRadius(value)
+        debugNPCState("NPC Range=" .. tostring(Config.npcDetectionRadius))
         NPCManager:refreshTrackedNPCs(Services.Workspace, Markers, TargetSizing, Config)
     end,
 

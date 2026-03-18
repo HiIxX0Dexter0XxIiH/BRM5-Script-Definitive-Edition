@@ -9,6 +9,12 @@ NPCManager.activeNPCs = {}      -- List of enemies currently in the game
 NPCManager.wallConnections = {} -- List of connections to clean up later
 NPCManager.modelConnections = {} -- Per-model connections for delayed NPC detection
 
+local function debugLog(config, message)
+    if config and config.debugNPCDetection then
+        print("[NPCManager] " .. message)
+    end
+end
+
 -- Finds the main part of a character (Root)
 function NPCManager.getRootPart(model)
     return model:FindFirstChild("Root") or 
@@ -46,8 +52,20 @@ function NPCManager:isWithinDetectionRadius(model, workspace, config)
 
     local root = self.getRootPart(model) or model:FindFirstChild("Head")
     local targetPosition = root and root.Position or model:GetPivot().Position
+    local distance = (targetPosition - origin).Magnitude
+    local inRange = distance <= (config.npcDetectionRadius or math.huge)
 
-    return (targetPosition - origin).Magnitude <= (config.npcDetectionRadius or math.huge)
+    if config and config.debugNPCDetection and (model.Name == "Male" or model.Name == "NPCS") then
+        debugLog(
+            config,
+            "Range check for " .. model:GetFullName()
+                .. " | distance=" .. string.format("%.1f", distance)
+                .. " | max=" .. tostring(config.npcDetectionRadius)
+                .. " | inRange=" .. tostring(inRange)
+        )
+    end
+
+    return inRange
 end
 
 -- Gets the NPC model either from Workspace.Model.Male/NPCS or direct Workspace.Male/NPCS.
@@ -60,10 +78,19 @@ function NPCManager:getNPCModel(container, workspace, config)
         return nil
     end
 
+    if config and config.debugNPCDetection then
+        debugLog(config, "Inspecting container: " .. container:GetFullName() .. " | name=" .. container.Name)
+    end
+
+    if self:isCandidateNPCModel(container) then
+        debugLog(config, "Direct candidate found: " .. container:GetFullName())
+    end
     if self:isCandidateNPCModel(container) and self:isWithinDetectionRadius(container, workspace, config) then
         if container.Name == "Male" then
+            debugLog(config, "Renaming direct Male -> NPCS: " .. container:GetFullName())
             container.Name = "NPCS"
         end
+        debugLog(config, "Accepted direct NPC: " .. container:GetFullName())
         return container
     end
 
@@ -72,17 +99,35 @@ function NPCManager:getNPCModel(container, workspace, config)
     end
 
     local npc = container:FindFirstChild("NPCS")
+    if npc and npc:IsA("Model") then
+        debugLog(config, "Found nested NPCS: " .. npc:GetFullName())
+    end
     if npc and npc:IsA("Model") and self:isWithinDetectionRadius(npc, workspace, config) then
+        debugLog(config, "Accepted nested NPCS: " .. npc:GetFullName())
         return npc
     end
 
     local male = container:FindFirstChild("Male")
+    if male and male:IsA("Model") then
+        local hasBillboard = male:FindFirstChildWhichIsA("BillboardGui", true) ~= nil
+        debugLog(
+            config,
+            "Found nested Male: " .. male:GetFullName()
+                .. " | hasBillboard=" .. tostring(hasBillboard)
+        )
+    end
     if male
         and male:IsA("Model")
         and not male:FindFirstChildWhichIsA("BillboardGui", true)
         and self:isWithinDetectionRadius(male, workspace, config) then
+        debugLog(config, "Renaming nested Male -> NPCS: " .. male:GetFullName())
         male.Name = "NPCS"
+        debugLog(config, "Accepted nested Male as NPCS: " .. male:GetFullName())
         return male
+    end
+
+    if male and male:IsA("Model") then
+        debugLog(config, "Rejected nested Male: " .. male:GetFullName())
     end
 
     return nil
@@ -96,16 +141,21 @@ end
 -- Adds a specific NPC model to our tracking list
 function NPCManager:addNPCModel(npc, container, markerModule, config)
     if not npc or self.activeNPCs[npc] then
+        if npc and self.activeNPCs[npc] then
+            debugLog(config, "Skipping already tracked NPC: " .. npc:GetFullName())
+        end
         return
     end
     local head = npc:FindFirstChild("Head")
     local root = self.getRootPart(npc)
     
     if not head or not root then 
+        debugLog(config, "Rejecting NPC without head/root: " .. npc:GetFullName())
         return 
     end
     
     self.activeNPCs[npc] = { head = head, root = root, character = npc, container = container }
+    debugLog(config, "Registered NPC: " .. npc:GetFullName())
     
     -- Create marker box if visibility markers are enabled
     if markerModule and markerModule.isEnabled() then
@@ -117,6 +167,7 @@ end
 function NPCManager:addNPC(container, workspace, markerModule, config)
     local npc = self:getNPCModel(container, workspace, config)
     if not npc then
+        debugLog(config, "No NPC resolved for container: " .. container:GetFullName())
         return
     end
 
@@ -126,14 +177,17 @@ end
 -- Tracks a model and waits for Male if it appears later
 function NPCManager:trackPotentialNPC(container, workspace, markerModule, config)
     if not (config and config.isNPCDetectionEnabled and config:isNPCDetectionEnabled()) then
+        debugLog(config, "Skipping detection because features are disabled")
         return
     end
 
     local npc = self:getNPCModel(container, workspace, config)
     if npc and self.activeNPCs[npc] then
+        debugLog(config, "Container already tracked: " .. npc:GetFullName())
         return
     end
     if npc then
+        debugLog(config, "Resolved NPC from container: " .. container:GetFullName())
         self:addNPC(container, workspace, markerModule, config)
         return
     end
@@ -147,6 +201,7 @@ function NPCManager:trackPotentialNPC(container, workspace, markerModule, config
     local connection
     connection = container.ChildAdded:Connect(function(child)
         if child:IsA("Model") and (child.Name == "Male" or child.Name == "NPCS") then
+            debugLog(config, "ChildAdded candidate: " .. child:GetFullName())
             self:addNPC(container, workspace, markerModule, config)
         end
     end)

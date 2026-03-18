@@ -19,6 +19,7 @@ Config.showTargetBox = false     -- Shows target bounds
 Config.fullBrightEnabled = false -- Removes shadows/darkness
 Config.guiVisible = true         -- Menu visibility
 Config.isUnloaded = false        -- To stop the script
+Config.debugNPCDetection = true  -- Temporary NPC detection debug
 
 -- WEAPON PATCHES
 Config.patchOptions = { 
