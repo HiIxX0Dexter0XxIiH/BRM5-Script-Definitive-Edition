@@ -38,9 +38,7 @@ end
 -- Updates lighting based on config
 function Lighting:update(lightingService, config)
     if config.fullBrightEnabled then
-        if not self.fullBrightApplied then
-            self:applyFullBright(lightingService)
-        end
+        self:applyFullBright(lightingService)
         return
     end
     if self.fullBrightApplied then
