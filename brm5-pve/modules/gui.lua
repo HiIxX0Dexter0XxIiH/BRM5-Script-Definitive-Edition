@@ -62,6 +62,20 @@ local function createLabel(parent, text, color, layoutIndex)
     return lbl
 end
 
+local function createInfoLabel(parent, text)
+    local lbl = Instance.new("TextLabel", parent)
+    lbl.Size = UDim2.new(1, -10, 0, 74)
+    lbl.Text = text
+    lbl.TextColor3 = Color3.fromRGB(185, 185, 185)
+    lbl.Font = "Gotham"
+    lbl.TextSize = 12
+    lbl.TextWrapped = true
+    lbl.TextXAlignment = "Left"
+    lbl.TextYAlignment = "Top"
+    lbl.BackgroundTransparency = 1
+    return lbl
+end
+
 -- Creates a slider
 local function createSlider(parent, label, initialValue, maxValue, callback, layoutIndex, services)
     local f = Instance.new("Frame", parent)
@@ -296,7 +310,7 @@ function GUI:init(services, config, callbacks)
     addTabBtn("Visuals", tabVisuals)
     addTabBtn("Weapons", tabWeapons)
     addTabBtn("Colors", tabColors)
-    addTabBtn("Credits", tabCredits)
+    addTabBtn("Credits and Help", tabCredits)
 
     -- COMBAT TAB
     createButton(tabCombat, "Silent 🎯", config.sizingEnabled, callbacks.onSizingToggle)
@@ -313,6 +327,10 @@ function GUI:init(services, config, callbacks)
         callbacks.onNPCDetectionRadiusChange,
         nil,
         services
+    )
+    createInfoLabel(
+        tabVisuals,
+        "If you're having performance issues, try lowering the NPC Range to the minimum and then gradually increasing it until you achieve good performance with the maximum possible distance."
     )
 
     -- WEAPONS TAB
@@ -343,9 +361,9 @@ function GUI:init(services, config, callbacks)
     createSlider(tabColors, "B", config.hiddenB, 255, callbacks.onHiddenBChange, layoutIndex, services)
 
     -- CREDITS TAB
-    local function addCredit(text, font)
+    local function addCredit(text, font, size)
         local c = Instance.new("TextLabel", tabCredits)
-        c.Size = UDim2.new(1, -10, 0, 50)
+        c.Size = UDim2.new(1, -10, 0, size or 50)
         c.Text = text
         c.TextColor3 = Color3.new(0.9, 0.9, 0.9)
         c.Font = font or "Gotham"
@@ -353,9 +371,51 @@ function GUI:init(services, config, callbacks)
         c.TextWrapped = true
         c.BackgroundTransparency = 1
     end
+    
+    local clipboardStatus = createInfoLabel(tabCredits, "Click a link to copy it to the clipboard.")
+    clipboardStatus.Size = UDim2.new(1, -10, 0, 40)
+    clipboardStatus.TextColor3 = Color3.fromRGB(140, 200, 255)
 
-    addCredit("Made by: HiIxX0Dexter0XxIiH", "GothamBold")
-    addCredit("https://github.com/HiIxX0Dexter0XxIiH/Roblox-Dexter-Scripts", "Gotham")
+    local function copyToClipboard(text, label)
+        if type(setclipboard) == "function" then
+            local ok = pcall(setclipboard, text)
+            if ok then
+                clipboardStatus.Text = "Copied to clipboard: " .. label
+                return
+            end
+        end
+        clipboardStatus.Text = "Clipboard is not available in this executor."
+    end
+
+    local function addLinkButton(label, url, accentColor)
+        local btn = Instance.new("TextButton", tabCredits)
+        btn.Size = UDim2.new(1, -10, 0, 44)
+        btn.BackgroundColor3 = accentColor
+        btn.Text = label
+        btn.TextColor3 = Color3.new(1, 1, 1)
+        btn.Font = "GothamBold"
+        btn.TextSize = 13
+        btn.AutoButtonColor = true
+        Instance.new("UICorner", btn)
+
+        btn.MouseButton1Click:Connect(function()
+            copyToClipboard(url, label)
+        end)
+
+        local urlLabel = Instance.new("TextLabel", btn)
+        urlLabel.Size = UDim2.new(1, -16, 0, 16)
+        urlLabel.Position = UDim2.new(0, 8, 1, -18)
+        urlLabel.BackgroundTransparency = 1
+        urlLabel.Text = url
+        urlLabel.TextColor3 = Color3.fromRGB(235, 235, 235)
+        urlLabel.Font = "Gotham"
+        urlLabel.TextSize = 10
+    end
+
+    addCredit("Credits and Help", "GothamBold", 28)
+    addCredit("Made by: HiIxX0Dexter0XxIiH", "GothamBold", 24)
+    addLinkButton("GitHub", "https://github.com/HiIxX0Dexter0XxIiH/Roblox-Dexter-Scripts", Color3.fromRGB(45, 95, 160))
+    addLinkButton("Reddit", "https://www.reddit.com/r/BRM5Scripts/", Color3.fromRGB(185, 75, 45))
 
     -- UNLOAD BUTTON
     local unl = Instance.new("TextButton", sidebar)
