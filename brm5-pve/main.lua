@@ -60,9 +60,14 @@ if not (Services and Config and NPCManager and TargetSizing and Markers and Ligh
     error("Failed to load one or more modules. Please verify the remote module files.")
 end
 
+Config:load()
 Lighting:storeOriginalSettings(Services.Lighting)
 
 local runtimeConnections = {}
+
+local function saveConfig()
+    Config:save()
+end
 
 local function syncMouseState()
     if Config.guiVisible then
@@ -92,11 +97,13 @@ local callbacks = {
             TargetSizing:cleanup(NPCManager)
         end
         NPCManager:refreshTrackedNPCs(Services.Workspace, Markers, TargetSizing, Config)
+        saveConfig()
     end,
 
     onShowTargetBoxToggle = function(enabled)
         Config.showTargetBox = enabled
         NPCManager:refreshTrackedNPCs(Services.Workspace, Markers, TargetSizing, Config)
+        saveConfig()
     end,
 
     onHighlightsToggle = function(enabled)
@@ -107,6 +114,7 @@ local callbacks = {
         else
             Markers.disable()
         end
+        saveConfig()
     end,
 
     onFullBrightToggle = function(enabled)
@@ -114,45 +122,55 @@ local callbacks = {
         if not enabled then
             Lighting:restoreOriginal(Services.Lighting)
         end
+        saveConfig()
     end,
 
     onStabilityToggle = function(enabled)
         Config.patchOptions.recoil = enabled
         Weapons.patchWeapons(Services.ReplicatedStorage, Config.patchOptions)
+        saveConfig()
     end,
 
     onFiremodeOptionsToggle = function(enabled)
         Config.patchOptions.firemodes = enabled
         Weapons.patchWeapons(Services.ReplicatedStorage, Config.patchOptions)
+        saveConfig()
     end,
 
     onVisibleRChange = function(value)
         Config:updateVisibleColor(value, nil, nil)
+        saveConfig()
     end,
 
     onVisibleGChange = function(value)
         Config:updateVisibleColor(nil, value, nil)
+        saveConfig()
     end,
 
     onVisibleBChange = function(value)
         Config:updateVisibleColor(nil, nil, value)
+        saveConfig()
     end,
 
     onHiddenRChange = function(value)
         Config:updateHiddenColor(value, nil, nil)
+        saveConfig()
     end,
 
     onHiddenGChange = function(value)
         Config:updateHiddenColor(nil, value, nil)
+        saveConfig()
     end,
 
     onHiddenBChange = function(value)
         Config:updateHiddenColor(nil, nil, value)
+        saveConfig()
     end,
 
     onNPCDetectionRadiusChange = function(value)
         Config:updateNPCDetectionRadius(value)
         NPCManager:refreshTrackedNPCs(Services.Workspace, Markers, TargetSizing, Config)
+        saveConfig()
     end,
 
     onUnload = function()
@@ -167,6 +185,7 @@ local callbacks = {
         NPCManager:cleanup()
         Lighting:restoreOriginal(Services.Lighting)
         Config.guiVisible = false
+        saveConfig()
         forceMouseLock()
         GUI:destroy()
     end
@@ -177,6 +196,12 @@ syncMouseState()
 
 NPCManager:scanWorkspace(Services.Workspace, Markers, Config)
 NPCManager:setupListener(Services.Workspace, Markers, Config)
+if Config.highlightEnabled then
+    Markers.enable(NPCManager, Config)
+end
+if Config.patchOptions.recoil or Config.patchOptions.firemodes then
+    Weapons.patchWeapons(Services.ReplicatedStorage, Config.patchOptions)
+end
 
 local markerAccumulator = 0
 local targetAccumulator = 0

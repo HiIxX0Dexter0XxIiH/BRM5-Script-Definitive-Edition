@@ -29,17 +29,17 @@ local function createTab(container)
 end
 
 -- Creates a toggle button
-local function createButton(parent, text, callback)
+local function createButton(parent, text, initialActive, callback)
     local btn = Instance.new("TextButton", parent)
     btn.Size = UDim2.new(1, -10, 0, 35)
-    btn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    btn.BackgroundColor3 = initialActive and Color3.fromRGB(85, 170, 255) or Color3.fromRGB(35, 35, 35)
     btn.Text = text
-    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.TextColor3 = initialActive and Color3.new(0, 0, 0) or Color3.new(1, 1, 1)
     btn.Font = "Gotham"
     btn.TextSize = 13
     Instance.new("UICorner", btn)
     
-    local active = false
+    local active = initialActive and true or false
     btn.MouseButton1Click:Connect(function()
         active = not active
         btn.BackgroundColor3 = active and Color3.fromRGB(85, 170, 255) or Color3.fromRGB(35, 35, 35)
@@ -299,12 +299,12 @@ function GUI:init(services, config, callbacks)
     addTabBtn("Credits", tabCredits)
 
     -- COMBAT TAB
-    createButton(tabCombat, "Silent 🎯", callbacks.onSizingToggle)
-    createButton(tabCombat, "Show HitBox", callbacks.onShowTargetBoxToggle)
+    createButton(tabCombat, "Silent 🎯", config.sizingEnabled, callbacks.onSizingToggle)
+    createButton(tabCombat, "Show HitBox", config.showTargetBox, callbacks.onShowTargetBoxToggle)
 
     -- VISUALS TAB
-    createButton(tabVisuals, "Walls 🔎", callbacks.onHighlightsToggle)
-    createButton(tabVisuals, "FullBright 💡", callbacks.onFullBrightToggle)
+    createButton(tabVisuals, "Walls 🔎", config.highlightEnabled, callbacks.onHighlightsToggle)
+    createButton(tabVisuals, "FullBright 💡", config.fullBrightEnabled, callbacks.onFullBrightToggle)
     createSlider(
         tabVisuals,
         "NPC Range",
@@ -318,8 +318,8 @@ function GUI:init(services, config, callbacks)
     -- WEAPONS TAB
     local weaponNote = createLabel(tabWeapons, "Reset character to apply changes", 
                                    Color3.fromRGB(255, 100, 100))
-    createButton(tabWeapons, "No recoil", callbacks.onStabilityToggle)
-    createButton(tabWeapons, "All Firemodes", callbacks.onFiremodeOptionsToggle)
+    createButton(tabWeapons, "No recoil", config.patchOptions.recoil, callbacks.onStabilityToggle)
+    createButton(tabWeapons, "All Firemodes", config.patchOptions.firemodes, callbacks.onFiremodeOptionsToggle)
 
     -- COLORS TAB
     local layoutIndex = 1

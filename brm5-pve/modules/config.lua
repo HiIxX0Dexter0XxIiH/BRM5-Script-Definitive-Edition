@@ -2,6 +2,7 @@
 -- Contains all settings, constants, and state variables
 
 local Config = {}
+local HttpService = game:GetService("HttpService")
 
 -- CONSTANTS
 Config.RAYCAST_COOLDOWN = 0.2
@@ -11,6 +12,7 @@ Config.NPC_REFRESH_INTERVAL = 0.5
 Config.TARGET_BOX_SIZE = Vector3.new(15, 15, 15) -- Size of the adjusted target bounds
 Config.MAX_NPC_DETECTION_RADIUS = 3000
 Config.npcDetectionRadius = Config.MAX_NPC_DETECTION_RADIUS
+Config.CONFIG_FILE = "brm5_pve_config.json"
 
 -- TOGGLES (State)
 Config.highlightEnabled = false  -- Visibility markers
@@ -57,6 +59,78 @@ end
 
 function Config:isNPCDetectionEnabled()
     return self.sizingEnabled or self.showTargetBox or self.highlightEnabled
+end
+
+function Config:serialize()
+    return {
+        highlightEnabled = self.highlightEnabled,
+        sizingEnabled = self.sizingEnabled,
+        showTargetBox = self.showTargetBox,
+        fullBrightEnabled = self.fullBrightEnabled,
+        npcDetectionRadius = self.npcDetectionRadius,
+        patchOptions = {
+            recoil = self.patchOptions.recoil,
+            firemodes = self.patchOptions.firemodes
+        },
+        visibleR = self.visibleR,
+        visibleG = self.visibleG,
+        visibleB = self.visibleB,
+        hiddenR = self.hiddenR,
+        hiddenG = self.hiddenG,
+        hiddenB = self.hiddenB
+    }
+end
+
+function Config:applySavedData(data)
+    if type(data) ~= "table" then
+        return
+    end
+
+    if data.highlightEnabled ~= nil then self.highlightEnabled = data.highlightEnabled end
+    if data.sizingEnabled ~= nil then self.sizingEnabled = data.sizingEnabled end
+    if data.showTargetBox ~= nil then self.showTargetBox = data.showTargetBox end
+    if data.fullBrightEnabled ~= nil then self.fullBrightEnabled = data.fullBrightEnabled end
+    if type(data.patchOptions) == "table" then
+        if data.patchOptions.recoil ~= nil then self.patchOptions.recoil = data.patchOptions.recoil end
+        if data.patchOptions.firemodes ~= nil then self.patchOptions.firemodes = data.patchOptions.firemodes end
+    end
+
+    self:updateVisibleColor(data.visibleR, data.visibleG, data.visibleB)
+    self:updateHiddenColor(data.hiddenR, data.hiddenG, data.hiddenB)
+    self:updateNPCDetectionRadius(data.npcDetectionRadius)
+end
+
+function Config:save()
+    if type(writefile) ~= "function" then
+        return false
+    end
+
+    local okEncode, encoded = pcall(HttpService.JSONEncode, HttpService, self:serialize())
+    if not okEncode then
+        return false
+    end
+
+    local okWrite = pcall(writefile, self.CONFIG_FILE, encoded)
+    return okWrite
+end
+
+function Config:load()
+    if type(isfile) ~= "function" or type(readfile) ~= "function" or not isfile(self.CONFIG_FILE) then
+        return false
+    end
+
+    local okRead, raw = pcall(readfile, self.CONFIG_FILE)
+    if not okRead or type(raw) ~= "string" or raw == "" then
+        return false
+    end
+
+    local okDecode, data = pcall(HttpService.JSONDecode, HttpService, raw)
+    if not okDecode then
+        return false
+    end
+
+    self:applySavedData(data)
+    return true
 end
 
 return Config
