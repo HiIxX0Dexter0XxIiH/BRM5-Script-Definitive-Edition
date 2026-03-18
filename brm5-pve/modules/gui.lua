@@ -6,6 +6,7 @@ local GUI = {}
 GUI.screenGui = nil
 GUI.mainFrame = nil
 GUI.modalOverlay = nil
+GUI.cursorIndicator = nil
 GUI.tabButtons = {}
 GUI.tabs = {}
 
@@ -141,6 +142,21 @@ function GUI:init(services, config, callbacks)
     modalOverlay.ZIndex = 0
     self.modalOverlay = modalOverlay
 
+    local cursorIndicator = Instance.new("Frame", self.screenGui)
+    cursorIndicator.Name = "CursorIndicator"
+    cursorIndicator.Size = UDim2.fromOffset(10, 10)
+    cursorIndicator.AnchorPoint = Vector2.new(0.5, 0.5)
+    cursorIndicator.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    cursorIndicator.BorderSizePixel = 0
+    cursorIndicator.Visible = config.guiVisible
+    cursorIndicator.ZIndex = 100
+    Instance.new("UICorner", cursorIndicator).CornerRadius = UDim.new(1, 0)
+    self.cursorIndicator = cursorIndicator
+
+    local cursorStroke = Instance.new("UIStroke", cursorIndicator)
+    cursorStroke.Color = Color3.fromRGB(0, 0, 0)
+    cursorStroke.Thickness = 1.5
+
     -- Main Window Frame
     local main = Instance.new("Frame", self.screenGui)
     main.Size = UDim2.new(0, 500, 0, 350)
@@ -189,6 +205,11 @@ function GUI:init(services, config, callbacks)
     services.RunService.RenderStepped:Connect(function()
         if dragging and dragInput then 
             updateDrag(dragInput) 
+        end
+
+        if self.cursorIndicator then
+            local mouseLocation = services.UserInputService:GetMouseLocation()
+            self.cursorIndicator.Position = UDim2.fromOffset(mouseLocation.X, mouseLocation.Y)
         end
     end)
 
@@ -343,6 +364,9 @@ function GUI:toggleVisibility()
         if self.modalOverlay then
             self.modalOverlay.Visible = self.mainFrame.Visible
         end
+        if self.cursorIndicator then
+            self.cursorIndicator.Visible = self.mainFrame.Visible
+        end
         return self.mainFrame.Visible
     end
     return false
@@ -356,6 +380,7 @@ function GUI:destroy()
     self.screenGui = nil
     self.mainFrame = nil
     self.modalOverlay = nil
+    self.cursorIndicator = nil
 end
 
 return GUI
