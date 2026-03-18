@@ -6,6 +6,7 @@ local Services = {}
 Services.Players = game:GetService("Players")
 Services.RunService = game:GetService("RunService")
 Services.UserInputService = game:GetService("UserInputService")
+Services.GuiService = game:GetService("GuiService")
 Services.Workspace = game:GetService("Workspace")
 Services.TweenService = game:GetService("TweenService")
 Services.ReplicatedStorage = game:GetService("ReplicatedStorage")

@@ -209,7 +209,14 @@ function GUI:init(services, config, callbacks)
 
         if self.cursorIndicator then
             local mouseLocation = services.UserInputService:GetMouseLocation()
-            self.cursorIndicator.Position = UDim2.fromOffset(mouseLocation.X, mouseLocation.Y)
+            local insetTopLeft = Vector2.zero
+            if services.GuiService then
+                insetTopLeft = services.GuiService:GetGuiInset()
+            end
+            self.cursorIndicator.Position = UDim2.fromOffset(
+                mouseLocation.X - insetTopLeft.X,
+                mouseLocation.Y - insetTopLeft.Y
+            )
         end
     end)
 
