@@ -1,3 +1,9 @@
+-- BRM5 v7.0 by dexter
+-- Main entrypoint for the modular PVP build. This file loads remote modules,
+-- wires them together, and drives the runtime update loop.
+-- Credits to ryknuq and their overvoltage script, which helped me understand
+-- how to integrate the Aim into this script.
+
 if typeof(clear) == "function" then
     clear()
 end
@@ -6,6 +12,7 @@ local MAIN_VERSION = "cache-bust-2026-03-18-03"
 local GITHUB_BASE = "https://raw.githubusercontent.com/HiIxX0Dexter0XxIiH/BRM5-Script-Definitive-Edition/main/brm5-pvp/modules/"
 local CACHE_BUSTER = MAIN_VERSION .. "-" .. tostring(os.time())
 
+-- Every module is loaded remotely so the public loader only needs this file.
 local function loadModule(moduleName)
     local url = GITHUB_BASE .. moduleName .. ".lua?v=" .. CACHE_BUSTER
 
@@ -68,6 +75,8 @@ local function disconnectRuntimeConnections()
     runtimeConnections = {}
 end
 
+-- GUI callbacks are the single place where UI state changes are translated
+-- into config updates and runtime side effects.
 local callbacks = {
     onAimToggle = function(enabled)
         Config.aimEnabled = enabled
@@ -173,6 +182,7 @@ GUI:init(Services, Config, callbacks)
 syncMouseState()
 AllyScan:startRoundMonitor(Services, Walls, Config)
 
+-- Build the initial runtime state before the heartbeat loop starts.
 Walls:refreshTrackedTargets(Services.Workspace, Config)
 Walls:setupListener(Services.Workspace, Config)
 Walls:setWallEnabled(Config.wallEnabled, Config)
@@ -183,6 +193,8 @@ end
 local targetAccumulator = 0
 local colorAccumulator = 0
 
+-- Heartbeat drives the lower-frequency maintenance work so we avoid
+-- rescanning and recoloring targets every frame.
 table.insert(runtimeConnections, Services.RunService.Heartbeat:Connect(function(dt)
     if Config.isUnloaded then
         return
@@ -231,11 +243,14 @@ table.insert(runtimeConnections, Services.UserInputService.InputBegan:Connect(fu
         return
     end
 
+    -- Right mouse activates aim assistance while held.
     if input.UserInputType == Enum.UserInputType.MouseButton2 then
         Aim:setHoldingRightClick(true)
         return
     end
 
+    -- Manual ally scan remains available even though the round monitor can
+    -- trigger scans automatically.
     if not gameProcessed and input.KeyCode == Enum.KeyCode.U then
         AllyScan:start(Config.ALLY_SCAN_DURATION, Services, Walls, Config)
     end

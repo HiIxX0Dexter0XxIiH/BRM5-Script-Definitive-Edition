@@ -1,5 +1,7 @@
 local Services = {}
 
+-- Shared service lookup lives here so the rest of the code can depend on one
+-- small table instead of repeating game:GetService calls everywhere.
 Services.Players = game:GetService("Players")
 Services.RunService = game:GetService("RunService")
 Services.UserInputService = game:GetService("UserInputService")

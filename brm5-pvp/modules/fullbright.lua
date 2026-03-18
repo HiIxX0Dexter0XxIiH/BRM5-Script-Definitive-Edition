@@ -3,6 +3,8 @@ local Lighting = {}
 Lighting.originalLighting = {}
 Lighting.fullBrightApplied = false
 
+-- Lighting changes are reversible, so we capture the pre-script values once
+-- and reuse them whenever FullBright is disabled or the script unloads.
 function Lighting:storeOriginalSettings(lightingService)
     self.originalLighting = {
         Brightness = lightingService.Brightness,

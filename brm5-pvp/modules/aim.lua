@@ -7,6 +7,8 @@ local Aim = {
 
 local Players = game:GetService("Players")
 
+-- The FOV circle is drawn with Roblox UI rather than Drawing so it behaves
+-- consistently across executors and stays aligned with the viewport center.
 local function getPlayerGui()
     local localPlayer = Players.LocalPlayer
     if not localPlayer then
@@ -77,6 +79,8 @@ function Aim:updateFOVCircle(camera, config)
         return
     end
 
+    -- The circle is a square frame with a full UICorner, so diameter controls
+    -- both the visual size and the effective radius shown to the user.
     local radius = math.max(config.fovRadius, 0)
     local diameter = radius * 2
     local screenCenter = getScreenCenter(camera)
@@ -93,6 +97,8 @@ function Aim:getClosestValidHead(walls, camera, config)
     local closestTarget, minDistance = nil, math.huge
     local screenCenter = getScreenCenter(camera)
 
+    -- Visibility is derived from the Wall_Box color, so aim only locks to
+    -- targets the wall system currently considers visible.
     for head in pairs(walls.trackedHeads) do
         local box = head and head:FindFirstChild(config.REQUIRED_CHILD)
         if head and head.Parent and box and box:IsA("BoxHandleAdornment") and box.Color3 == config.visibleColor then
@@ -123,6 +129,7 @@ function Aim:aimAtTarget(target, camera, config)
         return
     end
 
+    -- Higher smoothing values intentionally produce smaller mouse deltas.
     local smoothingFactor = math.clamp(1 - (config.smoothing / 100), 0, 1)
     mousemoverel(
         math.clamp(delta.X * smoothingFactor, -25, 25),

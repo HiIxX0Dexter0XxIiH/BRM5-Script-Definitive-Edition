@@ -1,4 +1,5 @@
--- Main Script (BRM5 PVE)
+-- BRM5 v7.0 by dexter 
+-- Credits to ryknuq and their overvoltage script, which helped me understand how to integrate the Aim into my script. Without their script, I don't think I could have done this.
 -- Coordinates all modules
 
 if typeof(clear) == "function" then

@@ -145,6 +145,8 @@ function GUI:init(services, config, callbacks)
     local localPlayer = services.localPlayer
     local playerMouse = localPlayer:GetMouse()
 
+    -- The modal overlay and custom cursor make the menu usable even while the
+    -- script temporarily releases the game's mouse lock.
     self.screenGui = Instance.new("ScreenGui", localPlayer.PlayerGui)
     self.screenGui.Name = "BRM5_PVP_Modular"
     self.screenGui.ResetOnSpawn = false
@@ -189,6 +191,8 @@ function GUI:init(services, config, callbacks)
     Instance.new("UICorner", main).CornerRadius = UDim.new(0, 8)
     self.mainFrame = main
 
+    -- Dragging logic is kept local to the frame so the module can rebuild the
+    -- GUI cleanly after unload/reload without shared state.
     local dragging, dragInput, dragStart, startPos
     local function updateDrag(input)
         local delta = input.Position - dragStart
@@ -308,6 +312,8 @@ function GUI:init(services, config, callbacks)
     addTabButton("Colors", tabColors)
     addTabButton("Credits and Help", tabCredits)
 
+    -- Tabs are intentionally thin: they only call the callbacks owned by
+    -- main.lua so game logic stays outside the UI layer.
     createToggleButton(tabCombat, "Aim", config.aimEnabled, callbacks.onAimToggle)
     createToggleButton(tabCombat, "FOV", config.fovEnabled, callbacks.onFOVToggle)
     createSlider(tabCombat, "FOV Radius", config.fovRadius, config.MAX_FOV_RADIUS, callbacks.onFOVRadiusChange, nil, services)

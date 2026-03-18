@@ -10,6 +10,8 @@ function NoRecoil.patchWeapons(replicatedStorage, patchOptions)
         return
     end
 
+    -- Receiver modules are the stable place to override recoil and firemode
+    -- tuning across the player weapon config tree.
     for _, platform in pairs(weaponsFolder:GetChildren()) do
         if platform.Name:match("^Platform_") then
             for _, weapon in pairs(platform:GetChildren()) do

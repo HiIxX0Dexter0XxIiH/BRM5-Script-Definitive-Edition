@@ -6,6 +6,8 @@ local AllyScan = {
     monitorAccumulator = 0
 }
 
+-- The round monitor watches the first-person WorldModel so ally scanning can
+-- restart automatically at the beginning of each round.
 local function getCameraWorldModel(services)
     local camera = services.Workspace.CurrentCamera or services.camera
     if not camera then
@@ -43,6 +45,8 @@ function AllyScan:start(duration, services, walls, config)
             return
         end
 
+        -- Allies are inferred from currently visible targets during the short
+        -- scan window, then renamed so the wall tracker ignores them.
         for _, model in ipairs(services.Workspace:GetDescendants()) do
             if model:IsA("Model") and model.Name == config.TARGET_NAME then
                 local head = model:FindFirstChild(config.TARGET_PART)
@@ -78,6 +82,8 @@ function AllyScan:startRoundMonitor(services, walls, config)
         end
         self.monitorAccumulator = 0
 
+        -- A fresh "Model" under WorldModel means a new round viewmodel is
+        -- ready, so we rename it once and trigger a single ally scan.
         local modelCandidate, meCandidate = getRoundModelCandidates(services)
         local activeRoundModel = modelCandidate or meCandidate
 

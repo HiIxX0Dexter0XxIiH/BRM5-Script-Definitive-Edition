@@ -7,6 +7,8 @@ local function isTargetModel(instance, config)
     return instance and instance:IsA("Model") and instance.Name == config.TARGET_NAME
 end
 
+-- Heads are the canonical tracked parts for both ESP coloring and aim target
+-- selection, so every public function in this module maintains that set.
 function Walls:destroyAllBoxes()
     for head in pairs(self.trackedHeads) do
         if head and head.Parent then
@@ -36,6 +38,8 @@ function Walls:createBoxForHead(head, config)
         return
     end
 
+    -- Reuse existing adornments so toggling Walls does not constantly rebuild
+    -- instances for already tracked targets.
     local existing = head:FindFirstChild("Wall_Box")
     if existing and existing:IsA("BoxHandleAdornment") then
         existing.Transparency = config.wallEnabled and config.BOX_TRANSPARENCY or 1
@@ -85,6 +89,8 @@ function Walls:setupListener(workspace, config)
             return
         end
 
+        -- Newly spawned models often arrive before their Head exists, so a
+        -- short delay makes registration much more reliable.
         task.delay(0.5, function()
             if config.isUnloaded then
                 return
@@ -121,6 +127,8 @@ function Walls:updateColors(camera, workspace, localPlayer, config)
         table.insert(raycastParams.FilterDescendantsInstances, localPlayer.Character)
     end
 
+    -- Colors are refreshed by raycasting from the camera to each tracked head.
+    -- The box stays hidden for ragdolled/dead models that expose constraints.
     local cameraPosition = camera.CFrame.Position
     for head in pairs(self.trackedHeads) do
         if not head or not head.Parent or not head:IsDescendantOf(workspace) then

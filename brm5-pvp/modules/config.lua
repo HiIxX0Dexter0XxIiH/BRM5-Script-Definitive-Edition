@@ -1,6 +1,7 @@
 local Config = {}
 local HttpService = game:GetService("HttpService")
 
+-- Centralized runtime state and persisted settings for the PVP script.
 Config.CONFIG_FILE = "brm5_pvp_config.json"
 
 Config.TARGET_NAME = "Male"
@@ -57,6 +58,8 @@ function Config:updateSmoothing(value)
 end
 
 function Config:serialize()
+    -- Only persist user-facing settings. Transient runtime state stays in
+    -- memory so unloading/reloading starts from a clean execution state.
     return {
         wallEnabled = self.wallEnabled,
         aimEnabled = self.aimEnabled,
