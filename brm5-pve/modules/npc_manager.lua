@@ -43,38 +43,36 @@ function NPCManager:isWithinDetectionRadius(model, workspace, config)
     return (targetPosition - origin).Magnitude <= (config.npcDetectionRadius or math.huge)
 end
 
--- Gets all NPC candidate models from a Workspace.Model container.
-function NPCManager:getNPCModels(container, workspace, config)
+-- Gets the inner NPC model from a Workspace.Model container.
+function NPCManager:getNPCModel(container, workspace, config)
     if not (config and config.isNPCDetectionEnabled and config:isNPCDetectionEnabled()) then
-        return {}
+        return nil
     end
 
     if not container or not container:IsA("Model") or container.Name ~= "Model" then
-        return {}
+        return nil
     end
 
-    local npcs = {}
-    for _, child in ipairs(container:GetChildren()) do
-        if child:IsA("Model") then
-            if child.Name == "NPCS" then
-                if self:isWithinDetectionRadius(child, workspace, config) then
-                    table.insert(npcs, child)
-                end
-            elseif child.Name == "Male"
-                and not child:FindFirstChildOfClass("BillboardGui")
-                and self:isWithinDetectionRadius(child, workspace, config) then
-                child.Name = "NPCS"
-                table.insert(npcs, child)
-            end
-        end
+    local npc = container:FindFirstChild("NPCS")
+    if npc and npc:IsA("Model") and self:isWithinDetectionRadius(npc, workspace, config) then
+        return npc
     end
 
-    return npcs
+    local male = container:FindFirstChild("Male")
+    if male
+        and male:IsA("Model")
+        and not male:FindFirstChildWhichIsA("BillboardGui", true)
+        and self:isWithinDetectionRadius(male, workspace, config) then
+        male.Name = "NPCS"
+        return male
+    end
+
+    return nil
 end
 
 -- Checks if the container matches the new NPC structure
 function NPCManager:isNPCModel(container, workspace, config)
-    return #self:getNPCModels(container, workspace, config) > 0
+    return self:getNPCModel(container, workspace, config) ~= nil
 end
 
 -- Adds a specific NPC model to our tracking list
@@ -99,14 +97,12 @@ end
 
 -- Adds all valid NPCs under a container
 function NPCManager:addNPC(container, workspace, markerModule, config)
-    local npcs = self:getNPCModels(container, workspace, config)
-    if #npcs == 0 then
+    local npc = self:getNPCModel(container, workspace, config)
+    if not npc then
         return
     end
 
-    for _, npc in ipairs(npcs) do
-        self:addNPCModel(npc, container, markerModule, config)
-    end
+    self:addNPCModel(npc, container, markerModule, config)
 end
 
 -- Tracks a model and waits for Male if it appears later
@@ -115,19 +111,13 @@ function NPCManager:trackPotentialNPC(container, workspace, markerModule, config
         return
     end
 
-    local npcs = self:getNPCModels(container, workspace, config)
-    local alreadyTracked = true
-    for _, npc in ipairs(npcs) do
-        if not self.activeNPCs[npc] then
-            alreadyTracked = false
-            break
-        end
-    end
-    if #npcs > 0 and alreadyTracked then
+    local npc = self:getNPCModel(container, workspace, config)
+    if npc and self.activeNPCs[npc] then
         return
     end
-    if #npcs > 0 then
+    if npc then
         self:addNPC(container, workspace, markerModule, config)
+        return
     end
     if not container:IsA("Model") or container.Name ~= "Model" then
         return
