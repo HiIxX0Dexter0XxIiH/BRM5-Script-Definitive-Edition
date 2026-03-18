@@ -120,6 +120,7 @@ end
 -- Initialize the GUI
 function GUI:init(services, config, callbacks)
     local localPlayer = services.localPlayer
+    local playerMouse = localPlayer:GetMouse()
     
     -- Create ScreenGui
     self.screenGui = Instance.new("ScreenGui", localPlayer.PlayerGui)
@@ -208,14 +209,9 @@ function GUI:init(services, config, callbacks)
         end
 
         if self.cursorIndicator then
-            local mouseLocation = services.UserInputService:GetMouseLocation()
-            local insetTopLeft = Vector2.zero
-            if services.GuiService then
-                insetTopLeft = services.GuiService:GetGuiInset()
-            end
             self.cursorIndicator.Position = UDim2.fromOffset(
-                mouseLocation.X - insetTopLeft.X,
-                mouseLocation.Y - insetTopLeft.Y
+                playerMouse.X,
+                playerMouse.Y
             )
         end
     end)
