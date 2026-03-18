@@ -68,9 +68,10 @@ local function syncMouseState()
     if Config.guiVisible then
         Services.UserInputService.MouseBehavior = Enum.MouseBehavior.Default
         Services.UserInputService.MouseIconEnabled = true
-        return
     end
+end
 
+local function forceMouseLock()
     Services.UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
     Services.UserInputService.MouseIconEnabled = false
 end
@@ -166,7 +167,7 @@ local callbacks = {
         NPCManager:cleanup()
         Lighting:restoreOriginal(Services.Lighting)
         Config.guiVisible = false
-        syncMouseState()
+        forceMouseLock()
         GUI:destroy()
     end
 }
@@ -186,7 +187,9 @@ table.insert(runtimeConnections, Services.RunService.Heartbeat:Connect(function(
         return
     end
 
-    syncMouseState()
+    if Config.guiVisible then
+        syncMouseState()
+    end
     Lighting:update(Services.Lighting, Config)
 
     npcAccumulator = npcAccumulator + dt
@@ -224,7 +227,12 @@ table.insert(runtimeConnections, Services.UserInputService.InputBegan:Connect(fu
     end
 
     if not gameProcessed and input.KeyCode == Enum.KeyCode.Insert then
+        local wasVisible = Config.guiVisible
         Config.guiVisible = GUI:toggleVisibility()
-        syncMouseState()
+        if Config.guiVisible then
+            syncMouseState()
+        elseif wasVisible then
+            forceMouseLock()
+        end
     end
 end))
