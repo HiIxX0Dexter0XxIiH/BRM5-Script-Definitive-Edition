@@ -38,11 +38,9 @@ function NPCManager:isWithinDetectionRadius(model, workspace, config)
     end
 
     local root = self.getRootPart(model) or model:FindFirstChild("Head")
-    if not root then
-        return false
-    end
+    local targetPosition = root and root.Position or model:GetPivot().Position
 
-    return (root.Position - origin).Magnitude <= (config.npcDetectionRadius or math.huge)
+    return (targetPosition - origin).Magnitude <= (config.npcDetectionRadius or math.huge)
 end
 
 -- Gets all NPC candidate models from a Workspace.Model container.

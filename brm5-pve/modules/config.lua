@@ -10,7 +10,7 @@ Config.TARGET_SYNC_INTERVAL = 0.25
 Config.NPC_REFRESH_INTERVAL = 0.5
 Config.TARGET_BOX_SIZE = Vector3.new(15, 15, 15) -- Size of the adjusted target bounds
 Config.MAX_NPC_DETECTION_RADIUS = 3000
-Config.npcDetectionRadius = 1500
+Config.npcDetectionRadius = Config.MAX_NPC_DETECTION_RADIUS
 
 -- TOGGLES (State)
 Config.highlightEnabled = false  -- Visibility markers
