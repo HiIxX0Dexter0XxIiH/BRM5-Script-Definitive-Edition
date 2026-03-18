@@ -5,11 +5,15 @@ if typeof(clear) == "function" then
     clear()
 end
 
+local MAIN_VERSION = "cache-bust-2026-03-18-01"
 local GITHUB_BASE = "https://raw.githubusercontent.com/HiIxX0Dexter0XxIiH/BRM5-Script-Definitive-Edition/main/brm5-pve/modules/"
-local CACHE_BUSTER = tostring(os.time())
+local CACHE_BUSTER = MAIN_VERSION .. "-" .. tostring(os.time())
+
+print("Starting BRM5 PVE Script... [" .. MAIN_VERSION .. "]")
 
 local function loadModule(moduleName)
     local url = GITHUB_BASE .. moduleName .. ".lua?v=" .. CACHE_BUSTER
+    print("Loading module: " .. moduleName .. " [" .. MAIN_VERSION .. "]")
 
     local okResponse, response = pcall(function()
         return game:HttpGet(url)
